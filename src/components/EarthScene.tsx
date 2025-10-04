@@ -6,7 +6,7 @@ import { Stars } from "@react-three/drei";
 import { EarthMaterial } from "./EarthMaterial";
 import ImpactMarker from "./ImpactMarker";
 import ProceduralAsteroid from "./ProceduralAsteroid";
-import AsteroidImpactAnimation from "./AsteroidImpactAnimation";
+import SimplifiedImpactAnimation from "./SimplifiedImpactAnimation";
 import * as THREE from "three";
 import { SceneCameraController, CameraScene } from "@/lib/sceneCamera";
 import { NeoSummary } from "@/types";
@@ -180,13 +180,17 @@ function SceneController({
         const point = intersects[0].point;
         const earthRotation = earthRef.current.rotation.y;
 
+        // Calculate latitude from Y position
         const normalizedY = point.y / 2;
         const lat =
           Math.asin(Math.max(-1, Math.min(1, normalizedY))) * (180 / Math.PI);
 
+        // Calculate longitude from X and Z, accounting for Earth rotation and texture offset
         let lon = Math.atan2(point.x, point.z) * (180 / Math.PI);
-        lon = lon - THREE.MathUtils.radToDeg(earthRotation) + 90;
+        // Adjust for Earth's rotation and texture offset (270° total)
+        lon = lon - THREE.MathUtils.radToDeg(earthRotation) + 270;
 
+        // Normalize to -180 to 180
         while (lon > 180) lon -= 360;
         while (lon < -180) lon += 360;
 
@@ -289,7 +293,7 @@ export default function EarthScene({
 
           {/* Impact animation */}
           {isImpacting && selectedNeo && impactPoint && (
-            <AsteroidImpactAnimation
+            <SimplifiedImpactAnimation
               asteroid={selectedNeo}
               impactPoint={impactPoint}
               startPosition={[-10, 2, 0]}

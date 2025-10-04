@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import AsteroidCarousel from "@/components/AsteroidCarousel";
+import ImpactStatsModal from "@/components/ImpactStatsModal";
 import { NeoSummary } from "@/types";
 import { CameraScene } from "@/lib/sceneCamera";
 
@@ -35,6 +36,8 @@ export default function Home() {
 
   // Animation state
   const [isImpacting, setIsImpacting] = useState(false);
+  const [showStatsModal, setShowStatsModal] = useState(false);
+  const [selectedCityName, setSelectedCityName] = useState<string>("");
 
   // Fetch asteroids on mount
   useEffect(() => {
@@ -90,13 +93,18 @@ export default function Home() {
     console.log("💥 Impact complete");
     setIsImpacting(false);
     setCameraScene(CameraScene.IMPACT_VIEW);
-    // TODO: Show impact metrics
+    // Show stats modal after brief delay
+    setTimeout(() => {
+      setShowStatsModal(true);
+    }, 1000);
   };
 
   const handleReset = () => {
     setSelectedNeo(null);
     setImpactPoint(null);
     setShowDetails(false);
+    setShowStatsModal(false);
+    setSelectedCityName("");
     setCameraScene(CameraScene.DEFAULT);
   };
 
@@ -309,6 +317,7 @@ export default function Home() {
                         console.log(
                           `Selected city: ${city.name} at ${city.lat}, ${city.lon}`
                         );
+                        setSelectedCityName(city.name);
                         setImpactPoint({ lat: city.lat, lon: city.lon });
                       }}
                       className="w-full px-4 py-3 text-left border-l-2 border-white/10 hover:border-red-500/50 hover:bg-white/5 text-white/80 text-sm font-light transition-all"
@@ -380,6 +389,17 @@ export default function Home() {
           </div>
         )}
       </div>
+
+      {/* Impact Statistics Modal */}
+      {selectedNeo && impactPoint && (
+        <ImpactStatsModal
+          isOpen={showStatsModal}
+          onClose={() => setShowStatsModal(false)}
+          asteroid={selectedNeo}
+          impactPoint={impactPoint}
+          cityName={selectedCityName}
+        />
+      )}
     </main>
   );
 }
