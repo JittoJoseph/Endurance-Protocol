@@ -56,7 +56,7 @@ const Earth = memo(
         {/* Cloud layer */}
         <mesh ref={cloudRef}>
           <sphereGeometry args={[2.01, 64, 64]} />
-          <meshBasicMaterial
+          <meshPhongMaterial
             map={cloudsMap}
             transparent
             opacity={0.2}
@@ -173,16 +173,11 @@ export default function EarthScene({
 
           {/* Lighting for realistic Earth rendering */}
           <directionalLight
-            intensity={2.5}
+            intensity={2.0}
             position={[5, 3, 5]}
             color="#ffffff"
           />
-          <ambientLight intensity={0.3} />
-          <hemisphereLight
-            intensity={0.5}
-            color="#ffffff"
-            groundColor="#444488"
-          />
+          <ambientLight intensity={0.1} />
 
           {/* Starfield background */}
           <Stars radius={100} depth={50} count={5000} factor={4} fade />

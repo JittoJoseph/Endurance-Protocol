@@ -22,24 +22,28 @@ body {
 }
 
 /* Custom scrollbar styles */
-.scrollbar-thin::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
 }
 
-.scrollbar-thin::-webkit-scrollbar-track,
-.scrollbar-track-transparent::-webkit-scrollbar-track {
-  background: transparent;
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
 }
 
-.scrollbar-thin::-webkit-scrollbar-thumb,
-.scrollbar-thumb-white\/10::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 2px;
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
 }
 
-.scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(255, 255, 255, 0.2);
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Fallback for Firefox */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05);
 }
 
 /* Animation keyframes */

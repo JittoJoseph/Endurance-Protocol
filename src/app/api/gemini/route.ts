@@ -30,23 +30,40 @@ export async function POST(request: NextRequest) {
 
     // Initialize Gemini
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-
+    
     // Generate appropriate prompt
     const prompt =
       promptType === 'compact'
         ? generateCompactPrompt(payload)
         : generateNarrativePrompt(payload);
 
-    // Call Gemini API
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const summary = response.text();
+    // Try gemini-2.5-flash-lite first (lighter, faster)
+    try {
+      const liteModel = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-lite' });
+      const result = await liteModel.generateContent(prompt);
+      const response = await result.response;
+      const summary = response.text();
 
-    return NextResponse.json({
-      summary,
-      cached: false,
-    });
+      return NextResponse.json({
+        summary,
+        cached: false,
+        model: 'flash-lite',
+      });
+    } catch (liteError) {
+      console.warn('Flash-lite overloaded, falling back to flash:', liteError);
+      
+      // Fallback to gemini-2.5-flash
+      const flashModel = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+      const result = await flashModel.generateContent(prompt);
+      const response = await result.response;
+      const summary = response.text();
+
+      return NextResponse.json({
+        summary,
+        cached: false,
+        model: 'flash',
+      });
+    }
   } catch (error) {
     console.error('Error calling Gemini API:', error);
     

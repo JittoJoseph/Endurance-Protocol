@@ -78,87 +78,90 @@ function ImpactTrajectory({
   const showImpact = progress >= 0.98;
 
   return (
-    <div className="relative mt-6 h-24">
-      <div
-        className="absolute"
-        style={{
-          top: "50%",
-          left: `${PATH_MARGIN}%`,
-          right: `${PATH_MARGIN}%`,
-          transform: "translateY(-50%)",
-        }}
-      >
-        <div className="relative h-0">
-          <div className="absolute top-1/2 left-0 right-0 -translate-y-1/2 border-t border-dashed border-white/25" />
-          <div
-            className="absolute top-1/2 left-0 h-1 -translate-y-1/2 bg-black/80"
-            style={{ width: `${coverPercent}%` }}
+    <>
+      <div className="relative mt-6 h-16">
+        <div
+          className="absolute"
+          style={{
+            top: "50%",
+            left: `${PATH_MARGIN}%`,
+            right: `${PATH_MARGIN}%`,
+            transform: "translateY(-50%)",
+          }}
+        >
+          <div className="relative h-0">
+            <div className="absolute top-1/2 left-0 right-0 -translate-y-1/2 border-t border-dashed border-white/25" />
+            <div
+              className="absolute top-1/2 left-0 h-1 -translate-y-1/2 bg-black/80"
+              style={{ width: `${coverPercent}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Earth */}
+        <div
+          className="absolute"
+          style={{
+            left: `calc(${earthPercent}% - ${EARTH_SIZE / 2}px)`,
+            top: `calc(50% - ${EARTH_SIZE / 2}px)`,
+          }}
+        >
+          <Image
+            src="/earth.png"
+            alt="Earth"
+            width={EARTH_SIZE}
+            height={EARTH_SIZE}
+            className="object-contain drop-shadow-[0_6px_20px_rgba(76,154,255,0.25)]"
           />
         </div>
-      </div>
 
-      {/* Earth */}
-      <div
-        className="absolute text-center"
-        style={{
-          left: `calc(${earthPercent}% - ${EARTH_SIZE / 2}px)`,
-          top: -EARTH_SIZE / 2,
-        }}
-      >
-        <Image
-          src="/earth.png"
-          alt="Earth"
-          width={EARTH_SIZE}
-          height={EARTH_SIZE}
-          className="object-contain drop-shadow-[0_6px_20px_rgba(76,154,255,0.25)]"
-        />
-        <div className="mt-2 text-[10px] uppercase tracking-[0.3em] text-white/40">
-          Earth
-        </div>
-      </div>
-
-      {/* Asteroid */}
-      <div
-        className="absolute z-10 text-center"
-        style={{
-          left: `calc(${asteroidPercent}% - ${ASTEROID_SIZE / 2}px)`,
-          top: -ASTEROID_SIZE / 2,
-        }}
-      >
-        <Image
-          src="/sattelite.png"
-          alt={asteroidName}
-          width={ASTEROID_SIZE}
-          height={ASTEROID_SIZE}
-          className="object-contain"
-          style={{
-            filter:
-              "brightness(0.75) contrast(1.2) saturate(0.65) sepia(0.35) hue-rotate(18deg)",
-          }}
-        />
-        <div className="mt-2 text-[10px] uppercase tracking-[0.28em] text-white/45">
-          {asteroidName.toUpperCase()}
-        </div>
-      </div>
-
-      <AnimatePresence>
-        {showImpact && (
-          <motion.div
-            key="impact-flash"
-            initial={{ scale: 0.4, opacity: 0.4 }}
-            animate={{ scale: [0.4, 1.4, 1.8], opacity: [0.3, 0.7, 0] }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 pointer-events-none"
+        {/* Asteroid */}
+        {progress < 1 && (
+          <div
+            className="absolute z-10"
+            style={{
+              left: `calc(${asteroidPercent}% - ${ASTEROID_SIZE / 2}px)`,
+              top: `calc(50% - ${ASTEROID_SIZE / 2}px)`,
+            }}
           >
-            <div className="relative w-16 h-16">
-              <div className="absolute inset-0 bg-gradient-radial from-amber-400/70 via-orange-500/50 to-transparent rounded-full blur" />
-              <div className="absolute inset-2 bg-gradient-radial from-white/80 via-amber-300/60 to-transparent rounded-full blur-sm" />
-            </div>
-          </motion.div>
+            <Image
+              src="/sattelite.png"
+              alt={asteroidName}
+              width={ASTEROID_SIZE}
+              height={ASTEROID_SIZE}
+              className="object-contain"
+              style={{
+                filter:
+                  "brightness(0.75) contrast(1.2) saturate(0.65) sepia(0.35) hue-rotate(18deg)",
+              }}
+            />
+          </div>
         )}
-      </AnimatePresence>
-    </div>
+
+        <AnimatePresence>
+          {showImpact && (
+            <motion.div
+              key="impact-flash"
+              initial={{ scale: 0.4, opacity: 0.4 }}
+              animate={{ scale: [0.4, 1.4, 1.8], opacity: [0.3, 0.7, 0] }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 pointer-events-none"
+            >
+              <div className="relative w-16 h-16">
+                <div className="absolute inset-0 bg-gradient-radial from-amber-400/70 via-orange-500/50 to-transparent rounded-full blur" />
+                <div className="absolute inset-2 bg-gradient-radial from-white/80 via-amber-300/60 to-transparent rounded-full blur-sm" />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      <div className="mt-6 flex justify-between text-[10px] uppercase tracking-[0.28em] text-white/45">
+        <span>{asteroidName.toUpperCase()}</span>
+        <span>Earth</span>
+      </div>
+    </>
   );
 }
 
@@ -243,135 +246,146 @@ function DartTrajectory({
     Math.min(((asteroidPercent - PATH_MARGIN) / PATH_RANGE) * 100, 100)
   );
 
-  const asteroidTop = -ASTEROID_SIZE / 2 - postIntercept * 42;
-  const asteroidOpacity = stage === "complete" ? 0.35 : 1;
-  const dartOpacity = stage === "complete" ? 0.5 : 1;
+  const asteroidTop = -ASTEROID_SIZE / 2 - postIntercept * 48;
+  const asteroidOpacity =
+    progress < interceptRatio ? 1 : Math.max(1 - postIntercept * 3.2, 0);
+  const dartOpacity =
+    progress < interceptRatio ? 1 : Math.max(1 - postIntercept * 4.5, 0);
   const dartTop = -DART_SIZE / 2 - Math.min(progress, 0.5) * 12;
   const showDeflection = progress >= interceptRatio;
+  const showAsteroidSprite = asteroidOpacity > 0.05;
+  const showDartSprite = dartOpacity > 0.05;
 
   return (
-    <div className="relative mt-6 h-24">
-      <div
-        className="absolute"
-        style={{
-          top: "50%",
-          left: `${PATH_MARGIN}%`,
-          right: `${PATH_MARGIN}%`,
-          transform: "translateY(-50%)",
-        }}
-      >
-        <div className="relative h-0">
-          <div className="absolute top-1/2 left-0 right-0 -translate-y-1/2 border-t border-dashed border-white/25" />
-          <div
-            className="absolute top-1/2 left-0 h-1 -translate-y-1/2 bg-black/80"
-            style={{ width: `${coverPercent}%` }}
+    <>
+      <div className="relative mt-6 h-16">
+        <div
+          className="absolute"
+          style={{
+            top: "50%",
+            left: `${PATH_MARGIN}%`,
+            right: `${PATH_MARGIN}%`,
+            transform: "translateY(-50%)",
+          }}
+        >
+          <div className="relative h-0">
+            <div className="absolute top-1/2 left-0 right-0 -translate-y-1/2 border-t border-dashed border-white/25" />
+            <div
+              className="absolute top-1/2 left-0 h-1 -translate-y-1/2 bg-black/80"
+              style={{ width: `${coverPercent}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Earth */}
+        <div
+          className="absolute"
+          style={{
+            left: `calc(${earthPercent}% - ${EARTH_SIZE / 2}px)`,
+            top: `calc(50% - ${EARTH_SIZE / 2}px)`,
+          }}
+        >
+          <Image
+            src="/earth.png"
+            alt="Earth"
+            width={EARTH_SIZE}
+            height={EARTH_SIZE}
+            className="object-contain drop-shadow-[0_6px_20px_rgba(76,154,255,0.25)]"
           />
         </div>
-      </div>
 
-      {/* Earth */}
-      <div
-        className="absolute text-center"
-        style={{
-          left: `calc(${earthPercent}% - ${EARTH_SIZE / 2}px)`,
-          top: -EARTH_SIZE / 2,
-        }}
-      >
-        <Image
-          src="/earth.png"
-          alt="Earth"
-          width={EARTH_SIZE}
-          height={EARTH_SIZE}
-          className="object-contain drop-shadow-[0_6px_20px_rgba(76,154,255,0.25)]"
-        />
-        <div className="mt-2 text-[10px] uppercase tracking-[0.3em] text-white/40">
-          Earth
-        </div>
-      </div>
+        {/* Asteroid */}
+        {showAsteroidSprite && (
+          <div
+            className="absolute z-10"
+            style={{
+              left: `calc(${asteroidPercent}% - ${ASTEROID_SIZE / 2}px)`,
+              top: `calc(50% - ${ASTEROID_SIZE / 2}px + ${
+                -postIntercept * 48
+              }px)`,
+              opacity: asteroidOpacity,
+              transition: stage === "animating" ? "none" : "opacity 0.4s ease",
+            }}
+          >
+            <Image
+              src="/sattelite.png"
+              alt={asteroidName}
+              width={ASTEROID_SIZE}
+              height={ASTEROID_SIZE}
+              className="object-contain"
+              style={{
+                filter:
+                  "brightness(0.7) contrast(1.25) saturate(0.65) sepia(0.35) hue-rotate(18deg)",
+              }}
+            />
+          </div>
+        )}
 
-      {/* Asteroid */}
-      <div
-        className="absolute z-10 text-center"
-        style={{
-          left: `calc(${asteroidPercent}% - ${ASTEROID_SIZE / 2}px)`,
-          top: asteroidTop,
-          opacity: asteroidOpacity,
-          transition: stage === "animating" ? "none" : "opacity 0.4s ease",
-        }}
-      >
-        <Image
-          src="/sattelite.png"
-          alt={asteroidName}
-          width={ASTEROID_SIZE}
-          height={ASTEROID_SIZE}
-          className="object-contain"
+        {/* DART */}
+        {showDartSprite && (
+          <div
+            className="absolute z-20"
+            style={{
+              left: `calc(${dartPercent}% - ${DART_SIZE / 2}px)`,
+              top: `calc(50% - ${DART_SIZE / 2}px + ${
+                -Math.min(progress, 0.5) * 12
+              }px)`,
+              opacity: dartOpacity,
+              transition: stage === "animating" ? "none" : "opacity 0.4s ease",
+            }}
+          >
+            <Image
+              src="/dart.png"
+              alt="DART spacecraft"
+              width={DART_SIZE}
+              height={DART_SIZE}
+              className="object-contain"
+            />
+          </div>
+        )}
+
+        {/* Intercept marker */}
+        <div
+          className="absolute top-1/2 -mt-1 h-2 w-2 rounded-full"
           style={{
-            filter:
-              "brightness(0.7) contrast(1.25) saturate(0.65) sepia(0.35) hue-rotate(18deg)",
+            left: `calc(${PATH_MARGIN + interceptRatio * PATH_RANGE}% - 4px)`,
+            backgroundColor:
+              stage === "complete"
+                ? "rgba(34,197,94,0.8)"
+                : "rgba(255,255,255,0.35)",
           }}
         />
-        <div className="mt-2 text-[10px] uppercase tracking-[0.28em] text-white/45">
-          {asteroidName.toUpperCase()}
-        </div>
+
+        <AnimatePresence>
+          {showDeflection && (
+            <motion.div
+              key="deflect-path"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.5 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.6 }}
+              className="absolute top-0 left-0 right-0 bottom-0 pointer-events-none"
+            >
+              <svg className="w-full h-full">
+                <path
+                  d="M 60% 50% Q 60% 25%, 60% 0%"
+                  stroke="rgba(34,197,94,0.7)"
+                  strokeWidth={2}
+                  strokeDasharray="8 12"
+                  fill="none"
+                />
+              </svg>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      {/* DART */}
-      <div
-        className="absolute z-20 text-center"
-        style={{
-          left: `calc(${dartPercent}% - ${DART_SIZE / 2}px)`,
-          top: dartTop,
-          opacity: dartOpacity,
-          transition: stage === "animating" ? "none" : "opacity 0.4s ease",
-        }}
-      >
-        <Image
-          src="/dart.png"
-          alt="DART spacecraft"
-          width={DART_SIZE}
-          height={DART_SIZE}
-          className="object-contain"
-        />
-        <div className="mt-2 text-[10px] uppercase tracking-[0.3em] text-white/45">
-          DART
-        </div>
+      <div className="mt-6 grid grid-cols-3 text-[10px] uppercase tracking-[0.28em] text-white/45">
+        <span>DART</span>
+        <span className="text-center">{asteroidName.toUpperCase()}</span>
+        <span className="text-right">Earth</span>
       </div>
-
-      {/* Intercept marker */}
-      <div
-        className="absolute top-1/2 -mt-1 h-2 w-2 rounded-full"
-        style={{
-          left: `calc(${PATH_MARGIN + interceptRatio * PATH_RANGE}% - 4px)`,
-          backgroundColor:
-            stage === "complete"
-              ? "rgba(34,197,94,0.8)"
-              : "rgba(255,255,255,0.35)",
-        }}
-      />
-
-      <AnimatePresence>
-        {showDeflection && (
-          <motion.div
-            key="deflect-path"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.5 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.6 }}
-            className="absolute top-0 left-0 right-0 bottom-0 pointer-events-none"
-          >
-            <svg className="w-full h-full">
-              <path
-                d="M 60% 50% Q 60% 25%, 60% 0%"
-                stroke="rgba(34,197,94,0.7)"
-                strokeWidth={2}
-                strokeDasharray="8 12"
-                fill="none"
-              />
-            </svg>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+    </>
   );
 }
 
@@ -638,7 +652,7 @@ export default function ImpactStatsModal({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ type: "spring", duration: 0.5 }}
-            className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+            className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-4xl max-h-[90vh] overflow-y-auto custom-scrollbar"
           >
             <div className="bg-black/90 backdrop-blur-xl border border-white/20 p-8">
               <TrajectoryPanel
@@ -670,48 +684,52 @@ export default function ImpactStatsModal({
                 </button>
               </motion.div>
 
-              {/* Impact Metrics Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                <div className="bg-white/5 border border-white/10 p-4">
-                  <div className="text-white/40 text-xs uppercase tracking-widest mb-2">
-                    Energy
+              {/* Impact Metrics Grid - Only show if DART not completed */}
+              {dartStage !== "complete" && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                  <div className="bg-white/5 border border-white/10 p-4">
+                    <div className="text-white/40 text-xs uppercase tracking-widest mb-2">
+                      Energy
+                    </div>
+                    <div className="text-white text-2xl font-light">
+                      {metrics.tntMegatons.toFixed(1)}
+                    </div>
+                    <div className="text-white/60 text-xs mt-1">MT TNT</div>
                   </div>
-                  <div className="text-white text-2xl font-light">
-                    {metrics.tntMegatons.toFixed(1)}
-                  </div>
-                  <div className="text-white/60 text-xs mt-1">MT TNT</div>
-                </div>
 
-                <div className="bg-white/5 border border-white/10 p-4">
-                  <div className="text-white/40 text-xs uppercase tracking-widest mb-2">
-                    Crater
+                  <div className="bg-white/5 border border-white/10 p-4">
+                    <div className="text-white/40 text-xs uppercase tracking-widest mb-2">
+                      Crater
+                    </div>
+                    <div className="text-white text-2xl font-light">
+                      {metrics.craterDiameterKm.toFixed(1)}
+                    </div>
+                    <div className="text-white/60 text-xs mt-1">
+                      km diameter
+                    </div>
                   </div>
-                  <div className="text-white text-2xl font-light">
-                    {metrics.craterDiameterKm.toFixed(1)}
-                  </div>
-                  <div className="text-white/60 text-xs mt-1">km diameter</div>
-                </div>
 
-                <div className="bg-white/5 border border-white/10 p-4">
-                  <div className="text-white/40 text-xs uppercase tracking-widest mb-2">
-                    Destruction
+                  <div className="bg-white/5 border border-white/10 p-4">
+                    <div className="text-white/40 text-xs uppercase tracking-widest mb-2">
+                      Destruction
+                    </div>
+                    <div className="text-white text-2xl font-light">
+                      {metrics.destructionRadiusKm.toFixed(1)}
+                    </div>
+                    <div className="text-white/60 text-xs mt-1">km radius</div>
                   </div>
-                  <div className="text-white text-2xl font-light">
-                    {metrics.destructionRadiusKm.toFixed(1)}
-                  </div>
-                  <div className="text-white/60 text-xs mt-1">km radius</div>
-                </div>
 
-                <div className="bg-white/5 border border-white/10 p-4">
-                  <div className="text-white/40 text-xs uppercase tracking-widest mb-2">
-                    Magnitude
+                  <div className="bg-white/5 border border-white/10 p-4">
+                    <div className="text-white/40 text-xs uppercase tracking-widest mb-2">
+                      Magnitude
+                    </div>
+                    <div className="text-white text-2xl font-light">
+                      {metrics.seismicEquivalentMagnitude?.toFixed(1) || "N/A"}
+                    </div>
+                    <div className="text-white/60 text-xs mt-1">Richter</div>
                   </div>
-                  <div className="text-white text-2xl font-light">
-                    {metrics.seismicEquivalentMagnitude?.toFixed(1) || "N/A"}
-                  </div>
-                  <div className="text-white/60 text-xs mt-1">Richter</div>
                 </div>
-              </div>
+              )}
 
               {/* Gemini AI Analysis */}
               {loading ? (
@@ -806,13 +824,9 @@ export default function ImpactStatsModal({
                         </h3>
                         <button
                           onClick={handleDartClick}
-                          className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white py-4 px-6 rounded-lg font-semibold tracking-wide uppercase transition-all duration-300 flex items-center justify-center gap-3 group"
+                          className="w-full border border-white/20 hover:border-white/40 text-white/60 hover:text-white py-3 px-4 text-xs uppercase tracking-widest transition-all duration-300"
                         >
-                          <span className="text-2xl">🛰️</span>
-                          <span>Run DART Simulation</span>
-                          <span className="text-xs opacity-70 group-hover:opacity-100">
-                            Double Asteroid Redirection Test
-                          </span>
+                          Run DART Simulation
                         </button>
                         <p className="text-white/40 text-xs mt-3 text-center">
                           Engage kinetic impactor scenario to attempt deflection

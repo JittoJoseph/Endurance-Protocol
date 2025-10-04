@@ -3,16 +3,18 @@ import { useLoader } from "@react-three/fiber";
 
 export const EarthMaterial = () => {
   // Load all textures in one call to prevent memory issues
-  const [dayMap, nightMap, , cloudsMap] = useLoader(THREE.TextureLoader, [
-    "/texture/2k_earth_daymap.jpg",
-    "/texture/2k_earth_nightmap.jpg",
-    // "/texture/02_earthspec1k.jpg",
-    "/texture/2k_earth_clouds.jpg",
-  ]);
+  const [dayMap, nightMap, specMap, cloudsMap] = useLoader(
+    THREE.TextureLoader,
+    [
+      "/texture/2k_earth_daymap.jpg",
+      "/texture/2k_earth_nightmap.jpg",
+      "/texture/02_earthspec1k.jpg",
+      "/texture/2k_earth_clouds.jpg",
+    ]
+  );
 
-  // Light direction should match the directionalLight in EarthScene
-  // Currently the scene has directionalLight at position [5, 3, 5]
-  const lightDirection = new THREE.Vector3(5, 3, 5).normalize();
+  // Fixed light direction from the sun (positive X direction)
+  const lightDirection = new THREE.Vector3(1, 0, 0);
 
   return {
     earthMaterial: (

@@ -18,6 +18,7 @@ export default function Animation2D({ onComplete }: Animation2DProps) {
   const [pathWidth, setPathWidth] = useState(0);
   const [progress, setProgress] = useState(0);
   const [showImpact, setShowImpact] = useState(false);
+  const [asteroidDestroyed, setAsteroidDestroyed] = useState(false);
   const animationRef = useRef<ReturnType<typeof animate> | null>(null);
   const impactTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -54,6 +55,7 @@ export default function Animation2D({ onComplete }: Animation2DProps) {
     asteroidX.set(0);
     setProgress(0);
     setShowImpact(false);
+    setAsteroidDestroyed(false);
 
     let cancelled = false;
 
@@ -65,6 +67,7 @@ export default function Animation2D({ onComplete }: Animation2DProps) {
     animationRef.current.then(() => {
       if (cancelled) return;
       setShowImpact(true);
+      setAsteroidDestroyed(true);
       impactTimeoutRef.current = setTimeout(() => {
         if (!cancelled) {
           setShowImpact(false);
@@ -86,13 +89,10 @@ export default function Animation2D({ onComplete }: Animation2DProps) {
   return (
     <div className="relative w-full h-32">
       {/* Earth sprite (fixed top-right) */}
-      <div className="absolute top-0 right-0 flex flex-col items-center">
+      <div className="absolute top-0 right-0">
         <div className="relative w-16 h-16">
           <Image src="/earth.png" alt="Earth" fill className="object-contain" />
         </div>
-        <span className="mt-2 text-[10px] uppercase tracking-[0.3em] text-white/40">
-          Earth
-        </span>
       </div>
 
       {/* Trajectory path */}
@@ -105,23 +105,22 @@ export default function Animation2D({ onComplete }: Animation2DProps) {
           />
 
           {/* Asteroid traveling */}
-          <motion.div
-            style={{ x: asteroidX }}
-            className="absolute -top-6 left-0 flex flex-col items-center"
-          >
-            <div className="relative w-12 h-12">
-              <Image
-                src="/sattelite.png"
-                alt="Asteroid"
-                fill
-                className="object-contain"
-                style={{ filter: "brightness(0.85) contrast(1.2)" }}
-              />
-            </div>
-            <span className="mt-1 text-[10px] uppercase tracking-[0.3em] text-white/40">
-              Asteroid
-            </span>
-          </motion.div>
+          {!asteroidDestroyed && (
+            <motion.div
+              style={{ x: asteroidX }}
+              className="absolute -top-6 left-0"
+            >
+              <div className="relative w-12 h-12">
+                <Image
+                  src="/sattelite.png"
+                  alt="Asteroid"
+                  fill
+                  className="object-contain"
+                  style={{ filter: "brightness(0.85) contrast(1.2)" }}
+                />
+              </div>
+            </motion.div>
+          )}
 
           {/* Impact flash */}
           {showImpact && (
@@ -137,6 +136,13 @@ export default function Animation2D({ onComplete }: Animation2DProps) {
               </div>
             </motion.div>
           )}
+        </div>
+      </div>
+
+      <div className="absolute left-0 right-0 bottom-0 px-20">
+        <div className="flex justify-between text-[10px] uppercase tracking-[0.3em] text-white/45">
+          <span>Asteroid</span>
+          <span>Earth</span>
         </div>
       </div>
     </div>
