@@ -304,12 +304,10 @@ function DartTrajectory({
     Math.min(((asteroidPercent - PATH_MARGIN) / PATH_RANGE) * 100, 100)
   );
 
-  const asteroidTop = -ASTEROID_SIZE / 2 - postIntercept * 48;
   const asteroidOpacity =
     progress < interceptRatio ? 1 : Math.max(1 - postIntercept * 3.2, 0);
   const dartOpacity =
     progress < interceptRatio ? 1 : Math.max(1 - postIntercept * 4.5, 0);
-  const dartTop = -DART_SIZE / 2 - Math.min(progress, 0.5) * 12;
   const showDeflection = progress >= interceptRatio;
   const showAsteroidSprite = asteroidOpacity > 0.05;
   const showDartSprite = dartOpacity > 0.05;
@@ -684,7 +682,7 @@ export default function ImpactStatsModal({
     setShowDartOption(false);
     setImpactTrajComplete(false);
     fetchGeminiAnalysis();
-  }, [isOpen]); // Removed fetchGeminiAnalysis from dependencies to prevent re-running
+  }, [isOpen, fetchGeminiAnalysis]);
 
   const handleDartComplete = useCallback(() => {
     setDartStage("complete");

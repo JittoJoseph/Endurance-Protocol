@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useMemo } from "react";
-import { useFrame, useThree } from "@react-three/fiber";
+import { useFrame, useThree, ThreeEvent } from "@react-three/fiber";
 import * as THREE from "three";
 
 import ImpactMarker from "./ImpactMarker";
@@ -148,7 +148,7 @@ export default function Earth({ onGlobeClick, impactLocation }: EarthProps) {
   });
 
   // Handle click on globe
-  const handleClick = (event: any) => {
+  const handleClick = (event: ThreeEvent<MouseEvent>) => {
     event.stopPropagation();
 
     if (!earthRef.current) return;
