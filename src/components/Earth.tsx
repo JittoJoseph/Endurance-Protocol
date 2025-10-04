@@ -4,11 +4,14 @@ import { useRef, useMemo } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 
+import ImpactMarker from "./ImpactMarker";
+
 interface EarthProps {
   onGlobeClick: (lat: number, lon: number) => void;
+  impactLocation: { lat: number; lon: number } | null;
 }
 
-export default function Earth({ onGlobeClick }: EarthProps) {
+export default function Earth({ onGlobeClick, impactLocation }: EarthProps) {
   const earthRef = useRef<THREE.Mesh>(null);
   const cloudsRef = useRef<THREE.Mesh>(null);
   const { raycaster, camera, gl } = useThree();
@@ -160,12 +163,25 @@ export default function Earth({ onGlobeClick }: EarthProps) {
 
     if (intersects.length > 0) {
       const point = intersects[0].point;
+      const earthRotation = earthRef.current.rotation.y;
 
-      // Convert 3D point to lat/lon
-      const radius = 2;
-      const lat = Math.asin(point.y / radius) * (180 / Math.PI);
-      const lon = Math.atan2(point.x, point.z) * (180 / Math.PI);
+      // Calculate latitude from Y position
+      const normalizedY = point.y / 2; // Earth radius is 2
+      const lat =
+        Math.asin(Math.max(-1, Math.min(1, normalizedY))) * (180 / Math.PI);
 
+      // Calculate longitude from X and Z, accounting for Earth rotation and texture offset
+      let lon = Math.atan2(point.x, point.z) * (180 / Math.PI);
+      // Adjust for Earth's rotation and texture offset (270° total)
+      lon = lon - THREE.MathUtils.radToDeg(earthRotation) + 270;
+
+      // Normalize to -180 to 180
+      while (lon > 180) lon -= 360;
+      while (lon < -180) lon += 360;
+
+      console.log(
+        `🌍 Earth clicked at: Lat ${lat.toFixed(2)}°, Lon ${lon.toFixed(2)}°`
+      );
       onGlobeClick(lat, lon);
     }
   };
@@ -181,6 +197,16 @@ export default function Earth({ onGlobeClick }: EarthProps) {
       >
         <sphereGeometry args={[2, 128, 128]} />
         <primitive object={earthMaterial} attach="material" />
+
+        {/* Impact Marker - attached to Earth so it rotates with it */}
+        {impactLocation && (
+          <ImpactMarker
+            lat={impactLocation.lat}
+            lon={impactLocation.lon}
+            radius={2}
+            visible={true}
+          />
+        )}
       </mesh>
 
       {/* Cloud Layer */}

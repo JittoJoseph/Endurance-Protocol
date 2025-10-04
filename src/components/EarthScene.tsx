@@ -4,7 +4,6 @@ import { Suspense, useMemo } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Stars } from "@react-three/drei";
 import Earth from "./Earth";
-import ImpactMarker from "./ImpactMarker";
 
 interface EarthSceneProps {
   impactLocation: { lat: number; lon: number } | null;
@@ -64,17 +63,8 @@ export default function EarthScene({
       />
       {/* Earth with Materials */}
       <Suspense fallback={null}>
-        <Earth onGlobeClick={onGlobeClick} />
+        <Earth onGlobeClick={onGlobeClick} impactLocation={impactLocation} />
       </Suspense>
-      {/* Impact Marker */}
-      {impactLocation && (
-        <ImpactMarker
-          lat={impactLocation.lat}
-          lon={impactLocation.lon}
-          radius={2}
-          visible={true}
-        />
-      )}
       {/* Camera Controls */}
       <OrbitControls
         enablePan={false}
