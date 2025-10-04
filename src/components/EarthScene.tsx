@@ -143,10 +143,12 @@ function SceneController({
     }
   }, [camera]);
 
-  // Handle scene transitions
+  // Handle scene transitions with callback support
   useEffect(() => {
     if (cameraControllerRef.current) {
-      cameraControllerRef.current.transitionToScene(cameraScene);
+      cameraControllerRef.current.transitionToScene(cameraScene, () => {
+        console.log(`✅ Camera transition to ${cameraScene} complete`);
+      });
     }
   }, [cameraScene]);
 
@@ -233,35 +235,14 @@ function SceneController({
 
   return (
     <>
-      {/* STATIC sun light - angled for slanted terminator */}
-      <directionalLight
-        intensity={2.5}
-        position={[10, 3, 0]} // STATIC position with Y offset
-        color="#ffffff"
-      />
-      <ambientLight intensity={0.15} />
+      {/* Sun light for Earth day/night */}
+      <directionalLight intensity={2.5} position={[10, 3, 0]} color="#ffffff" />
 
-      {/* Enhanced lighting for asteroid visibility */}
-      <pointLight
-        position={[-10, 3, 2]}
-        intensity={3.0}
-        distance={20}
-        color="#ffffff"
-      />
-      {/* Fill light from opposite angle */}
-      <pointLight
-        position={[-10, -1, -2]}
-        intensity={1.5}
-        distance={15}
-        color="#ffffff"
-      />
-      {/* Additional front light for better definition */}
-      <pointLight
-        position={[-8, 2, 5]}
-        intensity={1.0}
-        distance={15}
-        color="#8899ff"
-      />
+      {/* Strong ambient light so asteroid is always visible (not dark side) */}
+      <ambientLight intensity={0.8} />
+
+      {/* Hemisphere light for natural looking space lighting */}
+      <hemisphereLight intensity={1.0} color="#ffffff" groundColor="#444488" />
     </>
   );
 }
@@ -318,7 +299,7 @@ export default function EarthScene({
           {selectedNeo && !isImpacting && (
             <Asteroid3DModel
               asteroid={selectedNeo}
-              position={[-8, 2, 0]} // Positioned left of Earth
+              position={[-3, 0, -5]} // Foreground, left side - closer to camera
               autoRotate={true}
             />
           )}
@@ -328,7 +309,7 @@ export default function EarthScene({
             <SimplifiedImpactAnimation
               asteroid={selectedNeo}
               impactPoint={impactPoint}
-              startPosition={[-10, 2, 0]}
+              startPosition={[-15, 0, 0]} // Closer start for visible full trajectory
               onComplete={onImpactComplete}
             />
           )}

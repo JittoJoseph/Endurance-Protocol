@@ -70,7 +70,7 @@ export default function Home() {
     setSelectedNeo(neo);
     setShowDetails(true);
     setImpactPoint(null); // Reset impact point
-    setCameraScene(CameraScene.ASTEROID_DETAIL); // Move camera back
+    setCameraScene(CameraScene.ASTEROID_COMPOSITION); // Show asteroid + Earth composition
   };
 
   const handleGlobeClick = (lat: number, lon: number) => {
@@ -85,20 +85,21 @@ export default function Home() {
   const handleImpact = () => {
     if (!selectedNeo || !impactPoint) return;
     console.log("🚀 Launching impact simulation");
-    setCameraScene(CameraScene.WATCHING); // Move to side view
+    setCameraScene(CameraScene.SIDE_VIEW); // Move to side view
     setTimeout(() => {
       setIsImpacting(true);
-    }, 1200); // Start impact after camera settles
+    }, 3500); // Start impact after camera settles (3.5s camera duration)
   };
 
   const handleImpactComplete = () => {
     console.log("💥 Impact complete");
     setIsImpacting(false);
-    setCameraScene(CameraScene.IMPACT_VIEW);
-    // Show stats modal after brief delay
+    // Move camera closer to Earth for post-impact view
+    setCameraScene(CameraScene.POST_IMPACT);
+    // Show stats modal after slow camera zoom completes
     setTimeout(() => {
       setShowStatsModal(true);
-    }, 1000);
+    }, 3000); // Wait for camera to settle (6s duration, show modal halfway)
   };
 
   const handleReset = () => {
