@@ -3,15 +3,12 @@ import { useLoader } from "@react-three/fiber";
 
 export const EarthMaterial = () => {
   // Load all textures in one call to prevent memory issues
-  const [dayMap, nightMap, specMap, cloudsMap] = useLoader(
-    THREE.TextureLoader,
-    [
-      "/texture/2k_earth_daymap.jpg",
-      "/texture/2k_earth_nightmap.jpg",
-      "/texture/02_earthspec1k.jpg",
-      "/texture/2k_earth_clouds.jpg",
-    ]
-  );
+  const [dayMap, nightMap, , cloudsMap] = useLoader(THREE.TextureLoader, [
+    "/texture/2k_earth_daymap.jpg",
+    "/texture/2k_earth_nightmap.jpg",
+    // "/texture/02_earthspec1k.jpg",
+    "/texture/2k_earth_clouds.jpg",
+  ]);
 
   // Angled light direction for slanted day/night terminator
   const lightDirection = new THREE.Vector3(10, 3, 0).normalize();

@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { NeoSummary } from "@/types";
 import { calculateImpactMetrics } from "@/lib/physics";
-import Animation2D from "./Animation2D";
-import DartAnimation2D from "./DartAnimation2D";
+import Image from "next/image";
 
 interface ImpactStatsModalProps {
   isOpen: boolean;
@@ -21,6 +20,413 @@ interface GeminiAnalysis {
   recommendations: string[];
 }
 
+type TrajectoryStage = "idle" | "animating" | "complete";
+
+const PATH_MARGIN = 12;
+const PATH_RANGE = 100 - PATH_MARGIN * 2;
+const ASTEROID_SIZE = 48;
+const DART_SIZE = 40;
+const EARTH_SIZE = 64;
+
+interface ImpactTrajectoryProps {
+  asteroidName: string;
+  onProgress: (value: number) => void;
+  onComplete: () => void;
+}
+
+function ImpactTrajectory({
+  asteroidName,
+  onProgress,
+  onComplete,
+}: ImpactTrajectoryProps) {
+  const [progress, setProgress] = useState(0);
+  const rafRef = useRef<number | null>(null);
+  const completedRef = useRef(false);
+
+  useEffect(() => {
+    completedRef.current = false;
+    let start: number | null = null;
+    const duration = 3600;
+
+    const step = (timestamp: number) => {
+      if (start === null) start = timestamp;
+      const elapsed = timestamp - start;
+      const ratio = Math.min(elapsed / duration, 1);
+      setProgress(ratio);
+      onProgress(ratio);
+
+      if (ratio < 1) {
+        rafRef.current = requestAnimationFrame(step);
+      } else if (!completedRef.current) {
+        completedRef.current = true;
+        onComplete();
+      }
+    };
+
+    rafRef.current = requestAnimationFrame(step);
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [onProgress, onComplete]);
+
+  const asteroidPercent = PATH_MARGIN + progress * PATH_RANGE;
+  const earthPercent = PATH_MARGIN + PATH_RANGE;
+  const coverPercent = Math.max(
+    0,
+    Math.min(((asteroidPercent - PATH_MARGIN) / PATH_RANGE) * 100, 100)
+  );
+  const showImpact = progress >= 0.98;
+
+  return (
+    <div className="relative mt-6 h-24">
+      <div
+        className="absolute"
+        style={{
+          top: "50%",
+          left: `${PATH_MARGIN}%`,
+          right: `${PATH_MARGIN}%`,
+          transform: "translateY(-50%)",
+        }}
+      >
+        <div className="relative h-0">
+          <div className="absolute top-1/2 left-0 right-0 -translate-y-1/2 border-t border-dashed border-white/25" />
+          <div
+            className="absolute top-1/2 left-0 h-1 -translate-y-1/2 bg-black/80"
+            style={{ width: `${coverPercent}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Earth */}
+      <div
+        className="absolute text-center"
+        style={{
+          left: `calc(${earthPercent}% - ${EARTH_SIZE / 2}px)`,
+          top: -EARTH_SIZE / 2,
+        }}
+      >
+        <Image
+          src="/earth.png"
+          alt="Earth"
+          width={EARTH_SIZE}
+          height={EARTH_SIZE}
+          className="object-contain drop-shadow-[0_6px_20px_rgba(76,154,255,0.25)]"
+        />
+        <div className="mt-2 text-[10px] uppercase tracking-[0.3em] text-white/40">
+          Earth
+        </div>
+      </div>
+
+      {/* Asteroid */}
+      <div
+        className="absolute z-10 text-center"
+        style={{
+          left: `calc(${asteroidPercent}% - ${ASTEROID_SIZE / 2}px)`,
+          top: -ASTEROID_SIZE / 2,
+        }}
+      >
+        <Image
+          src="/sattelite.png"
+          alt={asteroidName}
+          width={ASTEROID_SIZE}
+          height={ASTEROID_SIZE}
+          className="object-contain"
+          style={{
+            filter:
+              "brightness(0.75) contrast(1.2) saturate(0.65) sepia(0.35) hue-rotate(18deg)",
+          }}
+        />
+        <div className="mt-2 text-[10px] uppercase tracking-[0.28em] text-white/45">
+          {asteroidName.toUpperCase()}
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {showImpact && (
+          <motion.div
+            key="impact-flash"
+            initial={{ scale: 0.4, opacity: 0.4 }}
+            animate={{ scale: [0.4, 1.4, 1.8], opacity: [0.3, 0.7, 0] }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 pointer-events-none"
+          >
+            <div className="relative w-16 h-16">
+              <div className="absolute inset-0 bg-gradient-radial from-amber-400/70 via-orange-500/50 to-transparent rounded-full blur" />
+              <div className="absolute inset-2 bg-gradient-radial from-white/80 via-amber-300/60 to-transparent rounded-full blur-sm" />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+interface DartTrajectoryProps {
+  stage: TrajectoryStage;
+  asteroidName: string;
+  onProgress?: (value: number) => void;
+  onComplete: () => void;
+}
+
+function DartTrajectory({
+  stage,
+  asteroidName,
+  onProgress,
+  onComplete,
+}: DartTrajectoryProps) {
+  const [progress, setProgress] = useState(stage === "complete" ? 1 : 0);
+  const rafRef = useRef<number | null>(null);
+  const completedRef = useRef(false);
+  const interceptRatio = 0.6;
+
+  useEffect(() => {
+    if (stage === "animating") {
+      completedRef.current = false;
+      let start: number | null = null;
+      const duration = 3800;
+
+      const step = (timestamp: number) => {
+        if (start === null) start = timestamp;
+        const elapsed = timestamp - start;
+        const ratio = Math.min(elapsed / duration, 1);
+        setProgress(ratio);
+        onProgress?.(ratio);
+
+        if (ratio < 1) {
+          rafRef.current = requestAnimationFrame(step);
+        } else if (!completedRef.current) {
+          completedRef.current = true;
+          onComplete();
+        }
+      };
+
+      rafRef.current = requestAnimationFrame(step);
+      return () => {
+        if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      };
+    }
+
+    if (stage === "idle") {
+      setProgress(0);
+      onProgress?.(0);
+    }
+
+    if (stage === "complete") {
+      setProgress(1);
+      onProgress?.(1);
+    }
+
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [stage, onComplete, onProgress]);
+
+  const approachPhase = Math.min(progress / interceptRatio, 1);
+  const postIntercept =
+    progress > interceptRatio
+      ? (progress - interceptRatio) / (1 - interceptRatio)
+      : 0;
+
+  const asteroidRatio = Math.min(
+    approachPhase * interceptRatio,
+    interceptRatio
+  );
+  const dartRatio = 1 - (1 - interceptRatio) * approachPhase;
+
+  const asteroidPercent = PATH_MARGIN + asteroidRatio * PATH_RANGE;
+  const dartPercent = PATH_MARGIN + dartRatio * PATH_RANGE;
+  const earthPercent = PATH_MARGIN + PATH_RANGE;
+
+  const coverPercent = Math.max(
+    0,
+    Math.min(((asteroidPercent - PATH_MARGIN) / PATH_RANGE) * 100, 100)
+  );
+
+  const asteroidTop = -ASTEROID_SIZE / 2 - postIntercept * 42;
+  const asteroidOpacity = stage === "complete" ? 0.35 : 1;
+  const dartOpacity = stage === "complete" ? 0.5 : 1;
+  const dartTop = -DART_SIZE / 2 - Math.min(progress, 0.5) * 12;
+  const showDeflection = progress >= interceptRatio;
+
+  return (
+    <div className="relative mt-6 h-24">
+      <div
+        className="absolute"
+        style={{
+          top: "50%",
+          left: `${PATH_MARGIN}%`,
+          right: `${PATH_MARGIN}%`,
+          transform: "translateY(-50%)",
+        }}
+      >
+        <div className="relative h-0">
+          <div className="absolute top-1/2 left-0 right-0 -translate-y-1/2 border-t border-dashed border-white/25" />
+          <div
+            className="absolute top-1/2 left-0 h-1 -translate-y-1/2 bg-black/80"
+            style={{ width: `${coverPercent}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Earth */}
+      <div
+        className="absolute text-center"
+        style={{
+          left: `calc(${earthPercent}% - ${EARTH_SIZE / 2}px)`,
+          top: -EARTH_SIZE / 2,
+        }}
+      >
+        <Image
+          src="/earth.png"
+          alt="Earth"
+          width={EARTH_SIZE}
+          height={EARTH_SIZE}
+          className="object-contain drop-shadow-[0_6px_20px_rgba(76,154,255,0.25)]"
+        />
+        <div className="mt-2 text-[10px] uppercase tracking-[0.3em] text-white/40">
+          Earth
+        </div>
+      </div>
+
+      {/* Asteroid */}
+      <div
+        className="absolute z-10 text-center"
+        style={{
+          left: `calc(${asteroidPercent}% - ${ASTEROID_SIZE / 2}px)`,
+          top: asteroidTop,
+          opacity: asteroidOpacity,
+          transition: stage === "animating" ? "none" : "opacity 0.4s ease",
+        }}
+      >
+        <Image
+          src="/sattelite.png"
+          alt={asteroidName}
+          width={ASTEROID_SIZE}
+          height={ASTEROID_SIZE}
+          className="object-contain"
+          style={{
+            filter:
+              "brightness(0.7) contrast(1.25) saturate(0.65) sepia(0.35) hue-rotate(18deg)",
+          }}
+        />
+        <div className="mt-2 text-[10px] uppercase tracking-[0.28em] text-white/45">
+          {asteroidName.toUpperCase()}
+        </div>
+      </div>
+
+      {/* DART */}
+      <div
+        className="absolute z-20 text-center"
+        style={{
+          left: `calc(${dartPercent}% - ${DART_SIZE / 2}px)`,
+          top: dartTop,
+          opacity: dartOpacity,
+          transition: stage === "animating" ? "none" : "opacity 0.4s ease",
+        }}
+      >
+        <Image
+          src="/dart.png"
+          alt="DART spacecraft"
+          width={DART_SIZE}
+          height={DART_SIZE}
+          className="object-contain"
+        />
+        <div className="mt-2 text-[10px] uppercase tracking-[0.3em] text-white/45">
+          DART
+        </div>
+      </div>
+
+      {/* Intercept marker */}
+      <div
+        className="absolute top-1/2 -mt-1 h-2 w-2 rounded-full"
+        style={{
+          left: `calc(${PATH_MARGIN + interceptRatio * PATH_RANGE}% - 4px)`,
+          backgroundColor:
+            stage === "complete"
+              ? "rgba(34,197,94,0.8)"
+              : "rgba(255,255,255,0.35)",
+        }}
+      />
+
+      <AnimatePresence>
+        {showDeflection && (
+          <motion.div
+            key="deflect-path"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.5 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6 }}
+            className="absolute top-0 left-0 right-0 bottom-0 pointer-events-none"
+          >
+            <svg className="w-full h-full">
+              <path
+                d="M 60% 50% Q 60% 25%, 60% 0%"
+                stroke="rgba(34,197,94,0.7)"
+                strokeWidth={2}
+                strokeDasharray="8 12"
+                fill="none"
+              />
+            </svg>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+interface TrajectoryPanelProps {
+  asteroidName: string;
+  dartStage: TrajectoryStage;
+  onImpactComplete: () => void;
+  onDartComplete: () => void;
+}
+
+function TrajectoryPanel({
+  asteroidName,
+  dartStage,
+  onImpactComplete,
+  onDartComplete,
+}: TrajectoryPanelProps) {
+  const [impactProgress, setImpactProgress] = useState(0);
+
+  const mode = dartStage === "idle" ? "impact" : "dart";
+
+  const statusText =
+    mode === "impact"
+      ? impactProgress < 1
+        ? "Impact trajectory simulation"
+        : "Impact path locked"
+      : dartStage === "animating"
+      ? "Defense simulation running"
+      : dartStage === "complete"
+      ? "Trajectory deflected"
+      : "Defense standby";
+
+  return (
+    <div className="mb-8 rounded-lg border border-white/12 bg-white/[0.04] px-6 py-5">
+      <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.24em] text-white/35">
+        <span>Impact trajectory</span>
+        <span className="text-white/50">{statusText}</span>
+      </div>
+
+      {mode === "impact" ? (
+        <ImpactTrajectory
+          asteroidName={asteroidName}
+          onProgress={setImpactProgress}
+          onComplete={onImpactComplete}
+        />
+      ) : (
+        <DartTrajectory
+          asteroidName={asteroidName}
+          stage={dartStage}
+          onComplete={onDartComplete}
+        />
+      )}
+    </div>
+  );
+}
+
 export default function ImpactStatsModal({
   isOpen,
   onClose,
@@ -34,11 +440,9 @@ export default function ImpactStatsModal({
   const [loading, setLoading] = useState(true);
   const [displayedText, setDisplayedText] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [showAnimation, setShowAnimation] = useState(true);
-  const [animationComplete, setAnimationComplete] = useState(false);
   const [showDartOption, setShowDartOption] = useState(false);
-  const [dartActive, setDartActive] = useState(false);
-  const [dartComplete, setDartComplete] = useState(false);
+  const [dartStage, setDartStage] = useState<TrajectoryStage>("idle");
+  const [impactTrajComplete, setImpactTrajComplete] = useState(false);
 
   // Calculate impact metrics
   const avgDiameter = asteroid.estDiameterMeters.avg;
@@ -46,45 +450,29 @@ export default function ImpactStatsModal({
     asteroid.closeApproachData?.[0]?.relativeVelocity.kilometersPerSecond ||
       "20"
   );
-  const metrics = calculateImpactMetrics(avgDiameter, velocity, 3000);
+  const metrics = useMemo(
+    () => calculateImpactMetrics(avgDiameter, velocity, 3000),
+    [avgDiameter, velocity]
+  );
 
   useEffect(() => {
-    if (isOpen) {
-      // Reset all states
-      setShowAnimation(true);
-      setAnimationComplete(false);
-      setShowDartOption(false);
-      setDartActive(false);
-      setDartComplete(false);
+    if (!geminiAnalysis) return;
+    if (dartStage !== "idle") return;
 
-      if (!geminiAnalysis) {
-        fetchGeminiAnalysis();
-      }
+    if (currentIndex >= geminiAnalysis.summary.length) {
+      const timer = setTimeout(() => setShowDartOption(true), 1200);
+      return () => clearTimeout(timer);
     }
-  }, [isOpen]);
-
-  const handleAnimationComplete = () => {
-    setAnimationComplete(true);
-    setShowAnimation(false);
-    // Show DART option after stats are displayed
-    setTimeout(() => {
-      setShowDartOption(true);
-    }, 2000);
-  };
+  }, [geminiAnalysis, currentIndex, dartStage]);
 
   const handleDartClick = () => {
-    // Reset to animation state
-    setAnimationComplete(false);
     setShowDartOption(false);
-    setDartActive(true);
-    setShowAnimation(true);
+    setDartStage("animating");
   };
 
-  const handleDartAnimationComplete = () => {
-    setDartActive(false);
-    setShowAnimation(false);
-    setDartComplete(true);
-  };
+  const handleImpactTrajectoryComplete = useCallback(() => {
+    setImpactTrajComplete(true);
+  }, []);
 
   // Typewriter effect
   useEffect(() => {
@@ -100,87 +488,136 @@ export default function ImpactStatsModal({
     }
   }, [currentIndex, geminiAnalysis]);
 
-  const fetchGeminiAnalysis = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch("/api/gemini", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          promptType: "narrative",
-          payload: {
-            name: asteroid.name,
-            diameterMeters: avgDiameter,
-            velocityKmS: velocity,
-            tntMegatons: metrics.tntMegatons,
-            craterDiameterKm: metrics.craterDiameterKm,
-            destructionRadiusKm: metrics.destructionRadiusKm,
-            targetCity:
-              cityName ||
-              `${impactLocation.lat.toFixed(2)}°, ${impactLocation.lon.toFixed(
-                2
-              )}°`,
-            estimatedPopulationAffected: metrics.approxCasualties,
-          },
-        }),
-      });
-
-      const data = await response.json();
-
-      // Use the summary from Gemini API
-      const summaryText = data.summary || "Impact analysis unavailable.";
-
-      setGeminiAnalysis({
-        summary: summaryText,
-        keyPoints: [
-          `Kinetic energy: ${metrics.kineticEnergyJ.toExponential(2)} Joules`,
-          `Crater diameter: ${metrics.craterDiameterKm.toFixed(1)} km`,
-          `Destruction radius: ${metrics.destructionRadiusKm.toFixed(1)} km`,
-          metrics.approxCasualties
-            ? `Estimated casualties: ${metrics.approxCasualties.toLocaleString()}`
-            : "Massive infrastructure damage",
-        ],
-        recommendations: [
-          "Immediate evacuation of surrounding areas",
-          "Activate planetary defense systems",
-          "International emergency response coordination",
-        ],
-      });
-      setCurrentIndex(0);
+  const fetchGeminiAnalysis = useCallback(
+    async (options?: { dartSuccess?: boolean }) => {
+      setLoading(true);
+      setGeminiAnalysis(null);
       setDisplayedText("");
-    } catch (error) {
-      console.error("Gemini API error:", error);
-      // Fallback analysis
-      setGeminiAnalysis({
-        summary: `Impact of ${
-          asteroid.name
-        } would create a ${metrics.craterDiameterKm.toFixed(
-          1
-        )}km crater with devastating effects across ${metrics.destructionRadiusKm.toFixed(
-          1
-        )}km radius. The ${metrics.tntMegatons.toFixed(
-          1
-        )} megaton explosion would cause immediate widespread destruction.`,
-        keyPoints: [
-          `Kinetic energy: ${metrics.kineticEnergyJ.toExponential(2)} Joules`,
-          `Crater diameter: ${metrics.craterDiameterKm.toFixed(1)} km`,
-          `Destruction radius: ${metrics.destructionRadiusKm.toFixed(1)} km`,
-          metrics.approxCasualties
-            ? `Estimated casualties: ${metrics.approxCasualties.toLocaleString()}`
-            : "Massive infrastructure damage",
-        ],
-        recommendations: [
-          "Immediate evacuation of surrounding areas",
-          "Activate planetary defense systems",
-          "International emergency response coordination",
-        ],
-      });
       setCurrentIndex(0);
+
+      if (options?.dartSuccess) {
+        setShowDartOption(false);
+      }
+
+      try {
+        const response = await fetch("/api/gemini", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            promptType: "narrative",
+            payload: {
+              name: asteroid.name,
+              diameterMeters: avgDiameter,
+              velocityKmS: velocity,
+              tntMegatons: metrics.tntMegatons,
+              craterDiameterKm: metrics.craterDiameterKm,
+              destructionRadiusKm: metrics.destructionRadiusKm,
+              targetCity:
+                cityName ||
+                `${impactLocation.lat.toFixed(
+                  2
+                )}°, ${impactLocation.lon.toFixed(2)}°`,
+              estimatedPopulationAffected: metrics.approxCasualties,
+              dartSuccess: options?.dartSuccess,
+            },
+          }),
+        });
+
+        const data = await response.json();
+        const summaryText = data.summary || "Impact analysis unavailable.";
+
+        setGeminiAnalysis({
+          summary: summaryText,
+          keyPoints: [
+            `Kinetic energy: ${metrics.kineticEnergyJ.toExponential(2)} Joules`,
+            `Crater diameter: ${metrics.craterDiameterKm.toFixed(1)} km`,
+            `Destruction radius: ${metrics.destructionRadiusKm.toFixed(1)} km`,
+            metrics.approxCasualties
+              ? `Estimated casualties: ${metrics.approxCasualties.toLocaleString()}`
+              : options?.dartSuccess
+              ? "Casualties avoided"
+              : "Massive infrastructure damage",
+          ],
+          recommendations: options?.dartSuccess
+            ? [
+                "Continue monitoring deflected trajectory",
+                "Document mission telemetry for future defenses",
+                "Coordinate recovery operations",
+              ]
+            : [
+                "Immediate evacuation of surrounding areas",
+                "Activate planetary defense systems",
+                "International emergency response coordination",
+              ],
+        });
+      } catch (error) {
+        console.error("Gemini API error:", error);
+        setGeminiAnalysis({
+          summary: options?.dartSuccess
+            ? `Planetary defense mission successfully diverted ${asteroid.name}. Earth is no longer in the impact corridor.`
+            : `Impact of ${
+                asteroid.name
+              } would create a ${metrics.craterDiameterKm.toFixed(
+                1
+              )}km crater with devastating effects across ${metrics.destructionRadiusKm.toFixed(
+                1
+              )}km radius. The ${metrics.tntMegatons.toFixed(
+                1
+              )} megaton explosion would cause immediate widespread destruction.`,
+          keyPoints: [
+            `Kinetic energy: ${metrics.kineticEnergyJ.toExponential(2)} Joules`,
+            `Crater diameter: ${metrics.craterDiameterKm.toFixed(1)} km`,
+            `Destruction radius: ${metrics.destructionRadiusKm.toFixed(1)} km`,
+            metrics.approxCasualties
+              ? `Estimated casualties: ${metrics.approxCasualties.toLocaleString()}`
+              : options?.dartSuccess
+              ? "Casualties avoided"
+              : "Massive infrastructure damage",
+          ],
+          recommendations: options?.dartSuccess
+            ? [
+                "Continue monitoring deflected trajectory",
+                "Document mission telemetry for future defenses",
+                "Coordinate recovery operations",
+              ]
+            : [
+                "Immediate evacuation of surrounding areas",
+                "Activate planetary defense systems",
+                "International emergency response coordination",
+              ],
+        });
+      } finally {
+        setLoading(false);
+      }
+    },
+    [
+      asteroid.name,
+      avgDiameter,
+      velocity,
+      metrics,
+      cityName,
+      impactLocation.lat,
+      impactLocation.lon,
+    ]
+  );
+
+  useEffect(() => {
+    if (!isOpen) {
       setDisplayedText("");
-    } finally {
-      setLoading(false);
+      setCurrentIndex(0);
+      return;
     }
-  };
+
+    setDartStage("idle");
+    setShowDartOption(false);
+    setImpactTrajComplete(false);
+    fetchGeminiAnalysis();
+  }, [isOpen, fetchGeminiAnalysis]);
+
+  const handleDartComplete = useCallback(() => {
+    setDartStage("complete");
+    fetchGeminiAnalysis({ dartSuccess: true });
+  }, [fetchGeminiAnalysis]);
 
   return (
     <AnimatePresence>
@@ -204,255 +641,241 @@ export default function ImpactStatsModal({
             className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-4xl max-h-[90vh] overflow-y-auto"
           >
             <div className="bg-black/90 backdrop-blur-xl border border-white/20 p-8">
-              {/* 2D Animation Phase */}
-              {showAnimation && !dartActive && (
-                <div className="w-full h-[500px] mb-8">
-                  <Animation2D
-                    onComplete={handleAnimationComplete}
-                    asteroidName={asteroid.name}
-                  />
+              <TrajectoryPanel
+                asteroidName={asteroid.name}
+                dartStage={dartStage}
+                onImpactComplete={handleImpactTrajectoryComplete}
+                onDartComplete={handleDartComplete}
+              />
+
+              {/* Header */}
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex justify-between items-start mb-8"
+              >
+                <div>
+                  <h2 className="text-3xl font-light text-white tracking-wide mb-2">
+                    Impact Analysis
+                  </h2>
+                  <p className="text-white/60 text-sm uppercase tracking-widest">
+                    {asteroid.name}
+                  </p>
                 </div>
-              )}
+                <button
+                  onClick={onClose}
+                  className="text-white/60 hover:text-white text-2xl transition-colors"
+                >
+                  ✕
+                </button>
+              </motion.div>
 
-              {/* DART Animation Phase */}
-              {showAnimation && dartActive && (
-                <div className="w-full h-[500px] mb-8">
-                  <DartAnimation2D
-                    onComplete={handleDartAnimationComplete}
-                    asteroidName={asteroid.name}
-                  />
+              {/* Impact Metrics Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <div className="bg-white/5 border border-white/10 p-4">
+                  <div className="text-white/40 text-xs uppercase tracking-widest mb-2">
+                    Energy
+                  </div>
+                  <div className="text-white text-2xl font-light">
+                    {metrics.tntMegatons.toFixed(1)}
+                  </div>
+                  <div className="text-white/60 text-xs mt-1">MT TNT</div>
                 </div>
-              )}
-              {/* Stats Content - Only show after animation */}
-              {animationComplete && (
-                <>
-                  {/* Header */}
-                  <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex justify-between items-start mb-8"
-                  >
-                    <div>
-                      <h2 className="text-3xl font-light text-white tracking-wide mb-2">
-                        Impact Analysis
-                      </h2>
-                      <p className="text-white/60 text-sm uppercase tracking-widest">
-                        {asteroid.name}
-                      </p>
-                    </div>
-                    <button
-                      onClick={onClose}
-                      className="text-white/60 hover:text-white text-2xl transition-colors"
-                    >
-                      ✕
-                    </button>
-                  </motion.div>
 
-                  {/* Impact Metrics Grid */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                    <div className="bg-white/5 border border-white/10 p-4">
-                      <div className="text-white/40 text-xs uppercase tracking-widest mb-2">
-                        Energy
-                      </div>
-                      <div className="text-white text-2xl font-light">
-                        {metrics.tntMegatons.toFixed(1)}
-                      </div>
-                      <div className="text-white/60 text-xs mt-1">MT TNT</div>
-                    </div>
+                <div className="bg-white/5 border border-white/10 p-4">
+                  <div className="text-white/40 text-xs uppercase tracking-widest mb-2">
+                    Crater
+                  </div>
+                  <div className="text-white text-2xl font-light">
+                    {metrics.craterDiameterKm.toFixed(1)}
+                  </div>
+                  <div className="text-white/60 text-xs mt-1">km diameter</div>
+                </div>
 
-                    <div className="bg-white/5 border border-white/10 p-4">
-                      <div className="text-white/40 text-xs uppercase tracking-widest mb-2">
-                        Crater
-                      </div>
-                      <div className="text-white text-2xl font-light">
-                        {metrics.craterDiameterKm.toFixed(1)}
-                      </div>
-                      <div className="text-white/60 text-xs mt-1">
-                        km diameter
-                      </div>
-                    </div>
+                <div className="bg-white/5 border border-white/10 p-4">
+                  <div className="text-white/40 text-xs uppercase tracking-widest mb-2">
+                    Destruction
+                  </div>
+                  <div className="text-white text-2xl font-light">
+                    {metrics.destructionRadiusKm.toFixed(1)}
+                  </div>
+                  <div className="text-white/60 text-xs mt-1">km radius</div>
+                </div>
 
-                    <div className="bg-white/5 border border-white/10 p-4">
-                      <div className="text-white/40 text-xs uppercase tracking-widest mb-2">
-                        Destruction
-                      </div>
-                      <div className="text-white text-2xl font-light">
-                        {metrics.destructionRadiusKm.toFixed(1)}
-                      </div>
-                      <div className="text-white/60 text-xs mt-1">
-                        km radius
-                      </div>
-                    </div>
+                <div className="bg-white/5 border border-white/10 p-4">
+                  <div className="text-white/40 text-xs uppercase tracking-widest mb-2">
+                    Magnitude
+                  </div>
+                  <div className="text-white text-2xl font-light">
+                    {metrics.seismicEquivalentMagnitude?.toFixed(1) || "N/A"}
+                  </div>
+                  <div className="text-white/60 text-xs mt-1">Richter</div>
+                </div>
+              </div>
 
-                    <div className="bg-white/5 border border-white/10 p-4">
-                      <div className="text-white/40 text-xs uppercase tracking-widest mb-2">
-                        Magnitude
-                      </div>
-                      <div className="text-white text-2xl font-light">
-                        {metrics.seismicEquivalentMagnitude?.toFixed(1) ||
-                          "N/A"}
-                      </div>
-                      <div className="text-white/60 text-xs mt-1">Richter</div>
-                    </div>
+              {/* Gemini AI Analysis */}
+              {loading ? (
+                <div className="text-center py-12">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                  <p className="text-white/60 mt-4 text-sm">
+                    Analyzing impact scenario...
+                  </p>
+                </div>
+              ) : geminiAnalysis ? (
+                <div className="space-y-6">
+                  {/* Summary with typewriter */}
+                  <div>
+                    <h3 className="text-white/60 text-xs uppercase tracking-widest mb-3">
+                      AI Analysis
+                    </h3>
+                    <p className="text-white/80 text-base leading-relaxed">
+                      {displayedText}
+                      {currentIndex < geminiAnalysis.summary.length && (
+                        <span className="inline-block w-2 h-4 bg-white/60 ml-1 animate-pulse" />
+                      )}
+                    </p>
                   </div>
 
-                  {/* Gemini AI Analysis */}
-                  {loading ? (
-                    <div className="text-center py-12">
-                      <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-                      <p className="text-white/60 mt-4 text-sm">
-                        Analyzing impact scenario...
-                      </p>
-                    </div>
-                  ) : geminiAnalysis ? (
-                    <div className="space-y-6">
-                      {/* Summary with typewriter */}
-                      <div>
-                        <h3 className="text-white/60 text-xs uppercase tracking-widest mb-3">
-                          AI Analysis
-                        </h3>
-                        <p className="text-white/80 text-base leading-relaxed">
-                          {displayedText}
-                          {currentIndex < geminiAnalysis.summary.length && (
-                            <span className="inline-block w-2 h-4 bg-white/60 ml-1 animate-pulse" />
-                          )}
-                        </p>
-                      </div>
-
-                      {/* Key Points */}
-                      {currentIndex >= geminiAnalysis.summary.length && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.2 }}
-                        >
-                          <h3 className="text-white/60 text-xs uppercase tracking-widest mb-3">
-                            Key Impact Factors
-                          </h3>
-                          <ul className="space-y-2">
-                            {geminiAnalysis.keyPoints.map((point, idx) => (
-                              <motion.li
-                                key={idx}
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.3 + idx * 0.1 }}
-                                className="text-white/70 text-sm flex items-start"
-                              >
-                                <span className="text-orange-500 mr-3">•</span>
-                                {point}
-                              </motion.li>
-                            ))}
-                          </ul>
-                        </motion.div>
-                      )}
-
-                      {/* Recommendations */}
-                      {currentIndex >= geminiAnalysis.summary.length && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.6 }}
-                        >
-                          <h3 className="text-white/60 text-xs uppercase tracking-widest mb-3">
-                            Response Recommendations
-                          </h3>
-                          <ul className="space-y-2">
-                            {geminiAnalysis.recommendations.map((rec, idx) => (
-                              <motion.li
-                                key={idx}
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.7 + idx * 0.1 }}
-                                className="text-white/70 text-sm flex items-start"
-                              >
-                                <span className="text-blue-400 mr-3">▸</span>
-                                {rec}
-                              </motion.li>
-                            ))}
-                          </ul>
-                        </motion.div>
-                      )}
-
-                      {/* DART Defense Button */}
-                      {currentIndex >= geminiAnalysis.summary.length &&
-                        showDartOption &&
-                        !dartComplete && (
-                          <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 1.0 }}
-                            className="mt-8 pt-6 border-t border-white/10"
+                  {/* Key Points */}
+                  {currentIndex >= geminiAnalysis.summary.length && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2 }}
+                    >
+                      <h3 className="text-white/60 text-xs uppercase tracking-widest mb-3">
+                        Key Impact Factors
+                      </h3>
+                      <ul className="space-y-2">
+                        {geminiAnalysis.keyPoints.map((point, idx) => (
+                          <motion.li
+                            key={idx}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.3 + idx * 0.1 }}
+                            className="text-white/70 text-sm flex items-start"
                           >
-                            <h3 className="text-white/60 text-xs uppercase tracking-widest mb-4">
-                              Planetary Defense Option
-                            </h3>
-                            <button
-                              onClick={handleDartClick}
-                              className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white py-4 px-6 rounded-lg font-semibold tracking-wide uppercase transition-all duration-300 flex items-center justify-center gap-3 group"
-                            >
-                              <span className="text-2xl">🛰️</span>
-                              <span>Try DART Mission</span>
-                              <span className="text-xs opacity-70 group-hover:opacity-100">
-                                (Double Asteroid Redirection Test)
-                              </span>
-                            </button>
-                            <p className="text-white/40 text-xs mt-3 text-center">
-                              Simulate kinetic impactor deflecting the asteroid
-                            </p>
-                          </motion.div>
-                        )}
+                            <span className="text-orange-500 mr-3">•</span>
+                            {point}
+                          </motion.li>
+                        ))}
+                      </ul>
+                    </motion.div>
+                  )}
 
-                      {/* DART Success Message */}
-                      {dartComplete && (
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.9 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          className="mt-8 p-6 bg-green-500/10 border-2 border-green-500/50 rounded-lg"
+                  {/* Recommendations */}
+                  {currentIndex >= geminiAnalysis.summary.length && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.6 }}
+                    >
+                      <h3 className="text-white/60 text-xs uppercase tracking-widest mb-3">
+                        Response Recommendations
+                      </h3>
+                      <ul className="space-y-2">
+                        {geminiAnalysis.recommendations.map((rec, idx) => (
+                          <motion.li
+                            key={idx}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.7 + idx * 0.1 }}
+                            className="text-white/70 text-sm flex items-start"
+                          >
+                            <span className="text-blue-400 mr-3">▸</span>
+                            {rec}
+                          </motion.li>
+                        ))}
+                      </ul>
+                    </motion.div>
+                  )}
+
+                  {/* DART Defense Button */}
+                  {currentIndex >= geminiAnalysis.summary.length &&
+                    showDartOption &&
+                    impactTrajComplete &&
+                    dartStage === "idle" && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 1.0 }}
+                        className="mt-8 pt-6 border-t border-white/10"
+                      >
+                        <h3 className="text-white/60 text-xs uppercase tracking-widest mb-4">
+                          Planetary Defense Option
+                        </h3>
+                        <button
+                          onClick={handleDartClick}
+                          className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white py-4 px-6 rounded-lg font-semibold tracking-wide uppercase transition-all duration-300 flex items-center justify-center gap-3 group"
                         >
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white text-xl">
-                              ✓
-                            </div>
-                            <div>
-                              <h3 className="text-green-300 font-bold text-lg">
-                                Mission Success!
-                              </h3>
-                              <p className="text-green-400/80 text-sm">
-                                Earth is safe from impact
-                              </p>
-                            </div>
-                          </div>
-                          <p className="text-white/70 text-sm">
-                            The DART spacecraft successfully intercepted{" "}
-                            {asteroid.name} and altered its trajectory. The
-                            asteroid has been deflected away from Earth,
-                            preventing catastrophic impact.
+                          <span className="text-2xl">🛰️</span>
+                          <span>Run DART Simulation</span>
+                          <span className="text-xs opacity-70 group-hover:opacity-100">
+                            Double Asteroid Redirection Test
+                          </span>
+                        </button>
+                        <p className="text-white/40 text-xs mt-3 text-center">
+                          Engage kinetic impactor scenario to attempt deflection
+                        </p>
+                      </motion.div>
+                    )}
+
+                  {dartStage === "animating" && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-6 text-center text-white/50 text-xs uppercase tracking-[0.3em]"
+                    >
+                      Planetary defense simulation running
+                    </motion.div>
+                  )}
+
+                  {/* DART Success Message */}
+                  {dartStage === "complete" && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="mt-8 p-6 bg-green-500/10 border-2 border-green-500/50 rounded-lg"
+                    >
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white text-xl">
+                          ✓
+                        </div>
+                        <div>
+                          <h3 className="text-green-300 font-bold text-lg">
+                            Mission Success
+                          </h3>
+                          <p className="text-green-400/80 text-sm">
+                            Earth impact avoided
                           </p>
-                          <div className="mt-4 p-3 bg-black/30 rounded">
-                            <div className="text-white/60 text-xs uppercase tracking-widest mb-2">
-                              Deflection Stats
-                            </div>
-                            <div className="grid grid-cols-2 gap-3 text-sm">
-                              <div>
-                                <div className="text-cyan-300">
-                                  Velocity Change
-                                </div>
-                                <div className="text-white">~0.5 km/s</div>
-                              </div>
-                              <div>
-                                <div className="text-cyan-300">
-                                  Miss Distance
-                                </div>
-                                <div className="text-white">~50,000 km</div>
-                              </div>
-                            </div>
+                        </div>
+                      </div>
+                      <p className="text-white/70 text-sm">
+                        The DART spacecraft intercepted {asteroid.name} and
+                        altered its trajectory. The asteroid is now on a safe
+                        course away from Earth.
+                      </p>
+                      <div className="mt-4 p-3 bg-black/30 rounded">
+                        <div className="text-white/60 text-xs uppercase tracking-widest mb-2">
+                          Deflection Metrics
+                        </div>
+                        <div className="grid grid-cols-2 gap-3 text-sm">
+                          <div>
+                            <div className="text-cyan-300">Velocity change</div>
+                            <div className="text-white">≈ 0.5 km/s</div>
                           </div>
-                        </motion.div>
-                      )}
-                    </div>
-                  ) : null}
-                </>
-              )}
+                          <div>
+                            <div className="text-cyan-300">
+                              Closest approach
+                            </div>
+                            <div className="text-white">≈ 50,000 km</div>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+              ) : null}
             </div>
           </motion.div>
         </>

@@ -1,218 +1,143 @@
 "use client";
 
-import { motion, useAnimation } from "framer-motion";
-import { useEffect, useState } from "react";
+import { animate, motion, useMotionValue } from "framer-motion";
 import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 
 interface Animation2DProps {
   onComplete: () => void;
-  asteroidName: string;
 }
 
 /**
- * 2D Impact Animation - Kurzgesagt style
- * Left: Asteroid → Right: Earth with disappearing dotted path
+ * Minimal 2D trajectory animation inside analysis panel
+ * Asteroid travels left → right, dotted path trails ahead, explosion on impact
  */
-export default function Animation2D({
-  onComplete,
-  asteroidName,
-}: Animation2DProps) {
-  const asteroidControls = useAnimation();
-  const explosionControls = useAnimation();
-  const earthShakeControls = useAnimation();
-
-  const [pathProgress, setPathProgress] = useState(0);
+export default function Animation2D({ onComplete }: Animation2DProps) {
+  const pathRef = useRef<HTMLDivElement>(null);
+  const asteroidX = useMotionValue(0);
+  const [pathWidth, setPathWidth] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const [showImpact, setShowImpact] = useState(false);
+  const animationRef = useRef<ReturnType<typeof animate> | null>(null);
+  const impactTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    playAnimation();
+    const measure = () => {
+      if (pathRef.current) {
+        setPathWidth(pathRef.current.offsetWidth);
+      }
+    };
+
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
   }, []);
 
-  const playAnimation = async () => {
-    // Animate path disappearing as asteroid moves
-    const pathInterval = setInterval(() => {
-      setPathProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(pathInterval);
-          return 100;
-        }
-        return prev + 3.33; // 100 / 30 frames = ~3.33% per frame over 3 seconds
-      });
-    }, 100);
-
-    // Phase 1: Asteroid travels from left to right (3 seconds)
-    await asteroidControls.start({
-      x: ["0%", "100%"],
-      rotate: [0, 360],
-      transition: {
-        duration: 3,
-        ease: "linear",
-      },
+  useEffect(() => {
+    const unsubscribe = asteroidX.on("change", (latest) => {
+      if (!pathWidth) return;
+      setProgress(Math.min(1, latest / pathWidth));
     });
 
-    clearInterval(pathInterval);
+    return () => unsubscribe();
+  }, [asteroidX, pathWidth]);
 
-    // Phase 2: Impact explosion (0.8 seconds)
-    await Promise.all([
-      explosionControls.start({
-        scale: [0, 1.5, 2],
-        opacity: [1, 1, 0],
-        transition: {
-          duration: 0.8,
-          times: [0, 0.5, 1],
-        },
-      }),
-      earthShakeControls.start({
-        x: [0, -8, 8, -8, 8, -4, 4, 0],
-        y: [0, -4, 4, -4, 4, -2, 2, 0],
-        rotate: [0, -2, 2, -2, 2, -1, 1, 0],
-        transition: {
-          duration: 0.8,
-        },
-      }),
-    ]);
+  useEffect(() => {
+    if (!pathWidth) return;
 
-    // Wait a moment then complete
-    setTimeout(() => {
-      onComplete();
-    }, 500);
-  };
+    animationRef.current?.stop();
+    if (impactTimeoutRef.current) {
+      clearTimeout(impactTimeoutRef.current);
+      impactTimeoutRef.current = null;
+    }
+
+    asteroidX.set(0);
+    setProgress(0);
+    setShowImpact(false);
+
+    let cancelled = false;
+
+    animationRef.current = animate(asteroidX, pathWidth, {
+      duration: 4.2,
+      ease: "linear",
+    });
+
+    animationRef.current.then(() => {
+      if (cancelled) return;
+      setShowImpact(true);
+      impactTimeoutRef.current = setTimeout(() => {
+        if (!cancelled) {
+          setShowImpact(false);
+          onComplete();
+        }
+      }, 900);
+    });
+
+    return () => {
+      cancelled = true;
+      animationRef.current?.stop();
+      if (impactTimeoutRef.current) {
+        clearTimeout(impactTimeoutRef.current);
+        impactTimeoutRef.current = null;
+      }
+    };
+  }, [asteroidX, onComplete, pathWidth]);
 
   return (
-    <div className="relative w-full h-full bg-gradient-to-br from-indigo-950/30 via-black/20 to-purple-950/30 rounded-lg overflow-hidden">
-      {/* Background stars */}
-      <div className="absolute inset-0">
-        {[...Array(30)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-1 h-1 bg-white rounded-full animate-pulse"
-            style={{
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              opacity: Math.random() * 0.5 + 0.2,
-              animationDelay: `${Math.random() * 2}s`,
-            }}
-          />
-        ))}
+    <div className="relative w-full h-32">
+      {/* Earth sprite (fixed top-right) */}
+      <div className="absolute top-0 right-0 flex flex-col items-center">
+        <div className="relative w-16 h-16">
+          <Image src="/earth.png" alt="Earth" fill className="object-contain" />
+        </div>
+        <span className="mt-2 text-[10px] uppercase tracking-[0.3em] text-white/40">
+          Earth
+        </span>
       </div>
 
-      {/* Dotted trajectory path - disappears as asteroid progresses */}
-      <svg
-        className="absolute top-1/2 left-0 w-full h-2 pointer-events-none"
-        style={{ transform: "translateY(-50%)" }}
-      >
-        <defs>
-          <linearGradient id="pathGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="white" stopOpacity="0" />
-            <stop
-              offset={`${pathProgress}%`}
-              stopColor="white"
-              stopOpacity="0"
-            />
-            <stop
-              offset={`${pathProgress}%`}
-              stopColor="white"
-              stopOpacity="0.4"
-            />
-            <stop offset="100%" stopColor="white" stopOpacity="0.4" />
-          </linearGradient>
-        </defs>
-        <line
-          x1="10%"
-          y1="50%"
-          x2="85%"
-          y2="50%"
-          stroke="url(#pathGradient)"
-          strokeWidth="2"
-          strokeDasharray="10,15"
-        />
-      </svg>
-
-      {/* Earth sprite (right side) */}
-      <motion.div
-        animate={earthShakeControls}
-        className="absolute right-[8%] top-1/2 -translate-y-1/2"
-      >
-        <div className="relative w-28 h-28 sm:w-36 sm:h-36">
-          <Image
-            src="/earth.png"
-            alt="Earth"
-            fill
-            className="object-contain"
-            style={{
-              animation: "spin 30s linear infinite",
-            }}
+      {/* Trajectory path */}
+      <div className="absolute left-0 right-0 top-12 px-20">
+        <div ref={pathRef} className="relative h-[2px]">
+          <div className="absolute inset-0 bg-[repeating-linear-gradient(90deg,rgba(148,163,184,0.5)_0_9px,transparent_9px_18px)]" />
+          <div
+            className="absolute inset-0 bg-black/90"
+            style={{ width: `${Math.min(progress * 100, 100)}%` }}
           />
-          {/* Glow effect */}
-          <div className="absolute inset-0 bg-blue-400/20 rounded-full blur-xl scale-125" />
-        </div>
-      </motion.div>
 
-      {/* Asteroid sprite (left to right) */}
-      <motion.div
-        animate={asteroidControls}
-        className="absolute left-[8%] top-1/2 -translate-y-1/2"
-        style={{ width: "60%" }}
-      >
-        <div className="relative w-16 h-16 sm:w-20 sm:h-20">
-          <Image
-            src="/earth.png"
-            alt={asteroidName}
-            fill
-            className="object-contain"
-            style={{
-              filter:
-                "brightness(0.5) contrast(1.2) saturate(0.8) sepia(0.3) hue-rotate(15deg)",
-            }}
-          />
-          {/* Asteroid trail effect */}
-          <div className="absolute inset-0 bg-orange-500/10 rounded-full blur-lg scale-150 -z-10" />
-        </div>
-      </motion.div>
+          {/* Asteroid traveling */}
+          <motion.div
+            style={{ x: asteroidX }}
+            className="absolute -top-6 left-0 flex flex-col items-center"
+          >
+            <div className="relative w-12 h-12">
+              <Image
+                src="/sattelite.png"
+                alt="Asteroid"
+                fill
+                className="object-contain"
+                style={{ filter: "brightness(0.85) contrast(1.2)" }}
+              />
+            </div>
+            <span className="mt-1 text-[10px] uppercase tracking-[0.3em] text-white/40">
+              Asteroid
+            </span>
+          </motion.div>
 
-      {/* Explosion effect at Earth position */}
-      <motion.div
-        animate={explosionControls}
-        className="absolute right-[8%] top-1/2 -translate-y-1/2 pointer-events-none"
-        initial={{ scale: 0, opacity: 0 }}
-      >
-        <div className="relative w-48 h-48 sm:w-64 sm:h-64">
-          {/* Fire layers - multiple colored circles */}
-          <div className="absolute inset-0 bg-yellow-300 rounded-full blur-2xl opacity-90" />
-          <div className="absolute inset-4 bg-orange-500 rounded-full blur-xl opacity-80" />
-          <div className="absolute inset-8 bg-red-600 rounded-full blur-lg opacity-70" />
-          <div className="absolute inset-12 bg-yellow-400 rounded-full blur-md opacity-60" />
-
-          {/* Explosion particles */}
-          {[...Array(12)].map((_, i) => (
+          {/* Impact flash */}
+          {showImpact && (
             <motion.div
-              key={i}
-              className="absolute w-3 h-3 bg-orange-400 rounded-full"
-              style={{
-                top: "50%",
-                left: "50%",
-              }}
-              animate={{
-                x: [0, Math.cos((i * Math.PI * 2) / 12) * 80],
-                y: [0, Math.sin((i * Math.PI * 2) / 12) * 80],
-                opacity: [1, 0],
-                scale: [1, 0.5],
-              }}
-              transition={{
-                duration: 0.8,
-                ease: "easeOut",
-              }}
-            />
-          ))}
+              initial={{ scale: 0.6, opacity: 0.3 }}
+              animate={{ scale: [0.6, 1.8, 2.2], opacity: [0.5, 0.9, 0] }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 pointer-events-none"
+            >
+              <div className="relative w-20 h-20">
+                <div className="absolute inset-0 bg-gradient-radial from-amber-400/70 via-orange-500/60 to-transparent rounded-full blur-md" />
+                <div className="absolute inset-2 bg-gradient-radial from-white/80 via-amber-300/70 to-transparent rounded-full blur" />
+              </div>
+            </motion.div>
+          )}
         </div>
-      </motion.div>
-
-      {/* Animation label */}
-      <div className="absolute top-6 left-6 text-white/70 text-sm">
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-          <span>Impact Simulation Running</span>
-        </div>
-        <div className="mt-2 text-white/50 text-xs">{asteroidName}</div>
       </div>
     </div>
   );
