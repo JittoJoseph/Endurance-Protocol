@@ -34,7 +34,7 @@ export default function AsteroidCarousel({
       <h2 className="text-white/60 text-xs font-light mb-6 uppercase tracking-[0.2em]">
         Near-Earth Objects
       </h2>
-      <div className="flex-1 overflow-y-auto space-y-2 pr-2 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+      <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
         {neos.map((neo, index) => (
           <motion.button
             key={neo.id}

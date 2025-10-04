@@ -122,7 +122,7 @@ export default function Animation2D({ onComplete }: Animation2DProps) {
             </motion.div>
           )}
 
-          {/* Impact flash */}
+          {/* Impact flash with fire effect */}
           {showImpact && (
             <motion.div
               initial={{ scale: 0.6, opacity: 0.3 }}
@@ -131,8 +131,60 @@ export default function Animation2D({ onComplete }: Animation2DProps) {
               className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 pointer-events-none"
             >
               <div className="relative w-20 h-20">
+                {/* Main explosion */}
                 <div className="absolute inset-0 bg-gradient-radial from-amber-400/70 via-orange-500/60 to-transparent rounded-full blur-md" />
                 <div className="absolute inset-2 bg-gradient-radial from-white/80 via-amber-300/70 to-transparent rounded-full blur" />
+
+                {/* Fire particles */}
+                {[...Array(8)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className="absolute w-2 h-6 bg-gradient-to-t from-red-600 to-yellow-400 rounded-full"
+                    style={{
+                      top: "50%",
+                      left: "50%",
+                      transformOrigin: "bottom center",
+                    }}
+                    initial={{ scale: 0, opacity: 1 }}
+                    animate={{
+                      scale: [0, 1, 0.8],
+                      opacity: [1, 0.8, 0],
+                      rotate: [0, i * 45 - 180],
+                      x: [0, Math.cos((i * Math.PI) / 4) * 25],
+                      y: [0, Math.sin((i * Math.PI) / 4) * 25],
+                    }}
+                    transition={{
+                      duration: 0.6,
+                      ease: "easeOut",
+                      delay: i * 0.05,
+                    }}
+                  />
+                ))}
+
+                {/* Shockwave rings */}
+                <motion.div
+                  className="absolute inset-0 border-2 border-orange-400/40 rounded-full"
+                  animate={{
+                    scale: [1, 2.5],
+                    opacity: [0.8, 0],
+                  }}
+                  transition={{
+                    duration: 0.8,
+                    ease: "easeOut",
+                  }}
+                />
+                <motion.div
+                  className="absolute inset-0 border border-red-500/30 rounded-full"
+                  animate={{
+                    scale: [1, 3],
+                    opacity: [0.6, 0],
+                  }}
+                  transition={{
+                    duration: 1.0,
+                    ease: "easeOut",
+                    delay: 0.1,
+                  }}
+                />
               </div>
             </motion.div>
           )}

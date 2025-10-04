@@ -24,9 +24,9 @@ type TrajectoryStage = "idle" | "animating" | "complete";
 
 const PATH_MARGIN = 12;
 const PATH_RANGE = 100 - PATH_MARGIN * 2;
-const ASTEROID_SIZE = 48;
+const ASTEROID_SIZE = 72;
 const DART_SIZE = 40;
-const EARTH_SIZE = 64;
+const EARTH_SIZE = 140;
 
 interface ImpactTrajectoryProps {
   asteroidName: string;
@@ -142,15 +142,73 @@ function ImpactTrajectory({
           {showImpact && (
             <motion.div
               key="impact-flash"
-              initial={{ scale: 0.4, opacity: 0.4 }}
-              animate={{ scale: [0.4, 1.4, 1.8], opacity: [0.3, 0.7, 0] }}
+              initial={{ scale: 0.3, opacity: 0.8 }}
+              animate={{ scale: [0.3, 1.5, 1.3], opacity: [0.8, 1, 0] }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 pointer-events-none"
+              transition={{ duration: 0.5, ease: "easeOut" }}
+              className="absolute pointer-events-none z-30"
+              style={{
+                left: `calc(${earthPercent}% - 20px)`,
+                top: `calc(50% - 20px)`,
+              }}
             >
-              <div className="relative w-16 h-16">
-                <div className="absolute inset-0 bg-gradient-radial from-amber-400/70 via-orange-500/50 to-transparent rounded-full blur" />
-                <div className="absolute inset-2 bg-gradient-radial from-white/80 via-amber-300/60 to-transparent rounded-full blur-sm" />
+              <div className="relative w-10 h-10">
+                {/* Core explosion - more intense */}
+                <div className="absolute inset-0 bg-gradient-radial from-white via-yellow-400/95 to-orange-500/80 rounded-full blur-sm" />
+                <div className="absolute inset-0.5 bg-gradient-radial from-yellow-300/90 via-red-500/70 to-transparent rounded-full blur" />
+
+                {/* Heavy impact particles */}
+                {[...Array(12)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className="absolute w-1 h-2 bg-gradient-to-t from-red-700 via-orange-500 to-yellow-300 rounded-full"
+                    style={{
+                      top: "50%",
+                      left: "50%",
+                      transformOrigin: "bottom center",
+                    }}
+                    initial={{ scale: 0, opacity: 1 }}
+                    animate={{
+                      scale: [0, 1.2, 0.8],
+                      opacity: [1, 0.9, 0],
+                      rotate: [0, i * 30 - 180], // 12 particles, 30 degrees apart
+                      x: [0, Math.cos((i * Math.PI) / 6) * 15],
+                      y: [0, Math.sin((i * Math.PI) / 6) * 15],
+                    }}
+                    transition={{
+                      duration: 0.4,
+                      ease: "easeOut",
+                      delay: i * 0.02,
+                    }}
+                  />
+                ))}
+
+                {/* Intense shockwave */}
+                <motion.div
+                  className="absolute inset-0 border-2 border-yellow-400/80 rounded-full"
+                  animate={{
+                    scale: [1, 2.8],
+                    opacity: [1, 0],
+                  }}
+                  transition={{
+                    duration: 0.5,
+                    ease: "easeOut",
+                  }}
+                />
+
+                {/* Secondary shockwave */}
+                <motion.div
+                  className="absolute inset-0 border border-red-500/60 rounded-full"
+                  animate={{
+                    scale: [1, 3.2],
+                    opacity: [0.7, 0],
+                  }}
+                  transition={{
+                    duration: 0.6,
+                    ease: "easeOut",
+                    delay: 0.1,
+                  }}
+                />
               </div>
             </motion.div>
           )}
@@ -626,7 +684,7 @@ export default function ImpactStatsModal({
     setShowDartOption(false);
     setImpactTrajComplete(false);
     fetchGeminiAnalysis();
-  }, [isOpen, fetchGeminiAnalysis]);
+  }, [isOpen]); // Removed fetchGeminiAnalysis from dependencies to prevent re-running
 
   const handleDartComplete = useCallback(() => {
     setDartStage("complete");

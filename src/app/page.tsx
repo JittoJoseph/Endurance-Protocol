@@ -329,12 +329,20 @@ export default function Home() {
                   Target: {impactLocation.lat.toFixed(2)}°,{" "}
                   {impactLocation.lon.toFixed(2)}°
                 </p>
-                <button
-                  onClick={handleImpact}
-                  className="w-full bg-red-600 hover:bg-red-700 text-white py-3 px-6 transition-colors duration-200 font-light tracking-wider uppercase"
-                >
-                  SIMULATE IMPACT
-                </button>
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleImpact}
+                    className="flex-1 border border-red-500/50 hover:border-red-400/80 text-red-400 hover:text-red-300 py-2 px-4 transition-all duration-200 font-light tracking-wider uppercase text-sm"
+                  >
+                    SIMULATE IMPACT
+                  </button>
+                  <button
+                    onClick={handleReset}
+                    className="px-4 py-2 border border-white/20 hover:border-white/40 text-white/60 hover:text-white transition-all font-light tracking-wider uppercase text-sm"
+                  >
+                    ✕ EXIT
+                  </button>
+                </div>
 
                 <button
                   onClick={() => setImpactLocation(null)}
