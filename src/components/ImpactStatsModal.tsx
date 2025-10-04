@@ -9,7 +9,7 @@ interface ImpactStatsModalProps {
   isOpen: boolean;
   onClose: () => void;
   asteroid: NeoSummary;
-  impactPoint: { lat: number; lon: number };
+  impactLocation: { lat: number; lon: number };
   cityName?: string;
 }
 
@@ -23,7 +23,7 @@ export default function ImpactStatsModal({
   isOpen,
   onClose,
   asteroid,
-  impactPoint,
+  impactLocation,
   cityName,
 }: ImpactStatsModalProps) {
   const [geminiAnalysis, setGeminiAnalysis] = useState<GeminiAnalysis | null>(
@@ -68,44 +68,41 @@ export default function ImpactStatsModal({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          prompt: `Analyze this asteroid impact scenario and provide a JSON response in EXACTLY this format (no markdown, no code blocks):
-{
-  "summary": "A single paragraph (2-3 sentences) describing the immediate devastation and impact zone",
-  "keyPoints": ["Point 1 about casualties", "Point 2 about infrastructure damage", "Point 3 about environmental effects"],
-  "recommendations": ["Recommendation 1 for evacuation", "Recommendation 2 for emergency response", "Recommendation 3 for long-term recovery"]
-}
-
-Asteroid: ${asteroid.name}
-Diameter: ${(avgDiameter / 1000).toFixed(2)} km
-Velocity: ${velocity.toFixed(1)} km/s
-Impact Energy: ${metrics.tntMegatons.toFixed(1)} megatons TNT equivalent
-Crater Diameter: ${metrics.craterDiameterKm.toFixed(1)} km
-Destruction Radius: ${metrics.destructionRadiusKm.toFixed(1)} km
-Location: ${
-            cityName ||
-            `${impactPoint.lat.toFixed(2)}°, ${impactPoint.lon.toFixed(2)}°`
-          }
-${
-  metrics.approxCasualties
-    ? `Estimated Casualties: ${metrics.approxCasualties.toLocaleString()}`
-    : ""
-}
-
-Provide realistic, scientific analysis. Be concise and factual.`,
+          promptType: "narrative",
+          payload: {
+            name: asteroid.name,
+            diameterMeters: avgDiameter,
+            velocityKmS: velocity,
+            tntMegatons: metrics.tntMegatons,
+            craterDiameterKm: metrics.craterDiameterKm,
+            destructionRadiusKm: metrics.destructionRadiusKm,
+            targetCity: cityName || `${impactLocation.lat.toFixed(2)}°, ${impactLocation.lon.toFixed(2)}°`,
+            estimatedPopulationAffected: metrics.approxCasualties,
+          },
         }),
       });
 
       const data = await response.json();
 
-      // Clean the response - remove markdown code blocks if present
-      let cleanedResponse = data.analysis || data.text || "";
-      cleanedResponse = cleanedResponse.replace(/```json\n?/g, "");
-      cleanedResponse = cleanedResponse.replace(/```\n?/g, "");
-      cleanedResponse = cleanedResponse.trim();
-
-      // Parse JSON
-      const parsed = JSON.parse(cleanedResponse);
-      setGeminiAnalysis(parsed);
+      // Use the summary from Gemini API
+      const summaryText = data.summary || "Impact analysis unavailable.";
+      
+      setGeminiAnalysis({
+        summary: summaryText,
+        keyPoints: [
+          `Kinetic energy: ${metrics.kineticEnergyJ.toExponential(2)} Joules`,
+          `Crater diameter: ${metrics.craterDiameterKm.toFixed(1)} km`,
+          `Destruction radius: ${metrics.destructionRadiusKm.toFixed(1)} km`,
+          metrics.approxCasualties
+            ? `Estimated casualties: ${metrics.approxCasualties.toLocaleString()}`
+            : "Massive infrastructure damage",
+        ],
+        recommendations: [
+          "Immediate evacuation of surrounding areas",
+          "Activate planetary defense systems",
+          "International emergency response coordination",
+        ],
+      });
       setCurrentIndex(0);
       setDisplayedText("");
     } catch (error) {

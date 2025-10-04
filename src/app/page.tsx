@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import AsteroidCarousel from "@/components/AsteroidCarousel";
 import ImpactStatsModal from "@/components/ImpactStatsModal";
 import { NeoSummary } from "@/types";
-import { CameraScene } from "@/lib/sceneCamera";
 
 // Dynamically import EarthScene to avoid SSR issues
 const EarthScene = dynamic(() => import("@/components/EarthScene"), {
@@ -22,20 +21,14 @@ export default function Home() {
   // Data state
   const [neos, setNeos] = useState<NeoSummary[]>([]);
   const [selectedNeo, setSelectedNeo] = useState<NeoSummary | null>(null);
-  const [impactPoint, setImpactPoint] = useState<{
+  const [impactLocation, setImpactLocation] = useState<{
     lat: number;
     lon: number;
   } | null>(null);
   const [loading, setLoading] = useState(true);
 
   // UI state
-  const [cameraScene, setCameraScene] = useState<CameraScene>(
-    CameraScene.DEFAULT
-  );
   const [showDetails, setShowDetails] = useState(false);
-
-  // Animation state
-  const [isImpacting, setIsImpacting] = useState(false);
   const [showStatsModal, setShowStatsModal] = useState(false);
   const [selectedCityName, setSelectedCityName] = useState<string>("");
 
@@ -69,8 +62,7 @@ export default function Home() {
     console.log("Selected asteroid:", neo.name);
     setSelectedNeo(neo);
     setShowDetails(true);
-    setImpactPoint(null); // Reset impact point
-    setCameraScene(CameraScene.ASTEROID_COMPOSITION); // Show asteroid + Earth composition
+    setImpactLocation(null); // Reset impact point
   };
 
   const handleGlobeClick = (lat: number, lon: number) => {
@@ -78,37 +70,23 @@ export default function Home() {
       console.log(
         `Impact point selected: ${lat.toFixed(2)}, ${lon.toFixed(2)}`
       );
-      setImpactPoint({ lat, lon });
+      setImpactLocation({ lat, lon });
     }
   };
 
   const handleImpact = () => {
-    if (!selectedNeo || !impactPoint) return;
+    if (!selectedNeo || !impactLocation) return;
     console.log("🚀 Launching impact simulation");
-    setCameraScene(CameraScene.SIDE_VIEW); // Move to side view
-    setTimeout(() => {
-      setIsImpacting(true);
-    }, 3500); // Start impact after camera settles (3.5s camera duration)
-  };
-
-  const handleImpactComplete = () => {
-    console.log("💥 Impact complete");
-    setIsImpacting(false);
-    // Move camera closer to Earth for post-impact view
-    setCameraScene(CameraScene.POST_IMPACT);
-    // Show stats modal after slow camera zoom completes
-    setTimeout(() => {
-      setShowStatsModal(true);
-    }, 3000); // Wait for camera to settle (6s duration, show modal halfway)
+    // Show stats modal immediately with 2D animation
+    setShowStatsModal(true);
   };
 
   const handleReset = () => {
     setSelectedNeo(null);
-    setImpactPoint(null);
+    setImpactLocation(null);
     setShowDetails(false);
     setShowStatsModal(false);
     setSelectedCityName("");
-    setCameraScene(CameraScene.DEFAULT);
   };
 
   return (
@@ -116,26 +94,10 @@ export default function Home() {
       {/* 3D Scene */}
       <div className="absolute inset-0">
         <EarthScene
-          selectedNeo={selectedNeo}
-          impactPoint={impactPoint}
+          impactLocation={impactLocation}
           onGlobeClick={handleGlobeClick}
-          cameraScene={cameraScene}
-          isImpacting={isImpacting}
-          onImpactComplete={handleImpactComplete}
         />
       </div>
-
-      {/* White Flash Effect on Impact */}
-      <AnimatePresence>
-        {isImpacting && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: [0, 1, 0] }}
-            transition={{ duration: 0.3, times: [0, 0.1, 1] }}
-            className="absolute inset-0 bg-white z-50 pointer-events-none"
-          />
-        )}
-      </AnimatePresence>
 
       {/* UI Overlay */}
       <div className="absolute inset-0 pointer-events-none">
@@ -156,7 +118,7 @@ export default function Home() {
 
         {/* Top Right - Quit Button (During Location Selection) */}
         <AnimatePresence>
-          {showDetails && selectedNeo && !impactPoint && (
+          {showDetails && selectedNeo && !impactLocation && (
             <motion.button
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -172,7 +134,7 @@ export default function Home() {
 
         {/* Top Right Quit Button (When location selection active) */}
         <AnimatePresence>
-          {showDetails && selectedNeo && !impactPoint && (
+          {showDetails && selectedNeo && !impactLocation && (
             <motion.button
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -249,7 +211,7 @@ export default function Home() {
 
         {/* Step Indicator (When Selected) */}
         <AnimatePresence>
-          {showDetails && selectedNeo && !impactPoint && (
+          {showDetails && selectedNeo && !impactLocation && (
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -269,7 +231,7 @@ export default function Home() {
 
         {/* Right Sidebar - City Presets (When Asteroid Selected) */}
         <AnimatePresence>
-          {showDetails && selectedNeo && !impactPoint && (
+          {showDetails && selectedNeo && !impactLocation && (
             <motion.div
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
@@ -321,7 +283,7 @@ export default function Home() {
                           `Selected city: ${city.name} at ${city.lat}, ${city.lon}`
                         );
                         setSelectedCityName(city.name);
-                        setImpactPoint({ lat: city.lat, lon: city.lon });
+                        setImpactLocation({ lat: city.lat, lon: city.lon });
                       }}
                       className="w-full px-4 py-3 text-left border-l-2 border-white/10 hover:border-red-500/50 hover:bg-white/5 text-white/80 text-sm font-light transition-all"
                     >
@@ -351,7 +313,7 @@ export default function Home() {
 
         {/* Right Sidebar - Impact Control */}
         <AnimatePresence>
-          {selectedNeo && impactPoint && (
+          {selectedNeo && impactLocation && (
             <motion.div
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
@@ -364,8 +326,8 @@ export default function Home() {
                   Impact Simulation Ready
                 </h3>
                 <p className="text-white/60 text-sm mb-6">
-                  Target: {impactPoint.lat.toFixed(2)}°,{" "}
-                  {impactPoint.lon.toFixed(2)}°
+                  Target: {impactLocation.lat.toFixed(2)}°,{" "}
+                  {impactLocation.lon.toFixed(2)}°
                 </p>
                 <button
                   onClick={handleImpact}
@@ -375,7 +337,7 @@ export default function Home() {
                 </button>
 
                 <button
-                  onClick={() => setImpactPoint(null)}
+                  onClick={() => setImpactLocation(null)}
                   className="w-full mt-4 py-2 border border-white/20 hover:border-white/40 text-white/60 hover:text-white text-xs uppercase tracking-widest transition-all"
                 >
                   Change Location
@@ -394,12 +356,12 @@ export default function Home() {
       </div>
 
       {/* Impact Statistics Modal */}
-      {selectedNeo && impactPoint && (
+      {selectedNeo && impactLocation && (
         <ImpactStatsModal
           isOpen={showStatsModal}
           onClose={() => setShowStatsModal(false)}
           asteroid={selectedNeo}
-          impactPoint={impactPoint}
+          impactLocation={impactLocation}
           cityName={selectedCityName}
         />
       )}
