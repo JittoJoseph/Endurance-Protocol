@@ -33,7 +33,7 @@ Keep it factual and badge each numeric value with units. Use short sentences, ma
 export function generateNarrativePrompt(
   payload: GeminiPromptPayload
 ): string {
-  const dartText = payload.dartSuccess !== undefined
+  const dartText = payload.dartSuccess !== undefined && payload.dartSuccess !== null
     ? payload.dartSuccess
       ? 'DART mission succeeded in deflecting the asteroid, preventing impact.'
       : 'DART mission failed to sufficiently deflect the asteroid.'

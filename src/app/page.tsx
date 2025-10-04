@@ -85,8 +85,10 @@ export default function Home() {
   const handleImpact = () => {
     if (!selectedNeo || !impactPoint) return;
     console.log("🚀 Launching impact simulation");
-    setIsImpacting(true);
-    // Camera will follow animation
+    setCameraScene(CameraScene.WATCHING); // Move to side view
+    setTimeout(() => {
+      setIsImpacting(true);
+    }, 1200); // Start impact after camera settles
   };
 
   const handleImpactComplete = () => {

@@ -6,6 +6,7 @@ const easeInOutQuad = (t: number): number =>
 export enum CameraScene {
   DEFAULT = 'default',
   ASTEROID_DETAIL = 'asteroid',
+  WATCHING = 'watching',
   IMPACT_VIEW = 'impact',
 }
 
@@ -24,10 +25,16 @@ export const CAMERA_SCENES: Record<CameraScene, CameraPosition> = {
     duration: 1.2,
   },
   [CameraScene.ASTEROID_DETAIL]: {
-    position: new THREE.Vector3(-15, 3, 0),
+    position: new THREE.Vector3(-25, 5, -5), // Much further back, slight angle
+    lookAt: new THREE.Vector3(-8, 2, 0), // Look at asteroid position
+    fov: 60,
+    duration: 1.5,
+  },
+  [CameraScene.WATCHING]: {
+    position: new THREE.Vector3(-8, 6, 8), // Side angle to watch journey
     lookAt: new THREE.Vector3(0, 0, 0),
     fov: 50,
-    duration: 1.5,
+    duration: 1.2,
   },
   [CameraScene.IMPACT_VIEW]: {
     position: new THREE.Vector3(6, 4, 6),

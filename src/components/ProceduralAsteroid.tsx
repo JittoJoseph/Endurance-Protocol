@@ -71,23 +71,23 @@ export default function ProceduralAsteroid({
     return baseGeometry;
   }, [asteroid]);
 
-  // Realistic asteroid material (grey, rocky) with slight emissive glow for visibility
+  // Realistic asteroid material (grey, rocky, dark like in space)
   const material = useMemo(() => {
     return new THREE.MeshStandardMaterial({
-      color: new THREE.Color(0x999999), // Slightly lighter grey
-      roughness: 0.9, // Very rough (rocky surface)
-      metalness: 0.15, // Slightly metallic (iron content)
-      emissive: new THREE.Color(0x222222), // Slight emissive glow
-      emissiveIntensity: 0.3,
+      color: new THREE.Color(0x444444), // Darker grey
+      roughness: 0.95, // Very rough (rocky surface)
+      metalness: 0.05, // Barely metallic
+      emissive: new THREE.Color(0x000000), // No glow
+      emissiveIntensity: 0,
       flatShading: false, // Smooth shading with vertex normals
     });
   }, []);
 
-  // Subtle random rotation
+  // Very subtle random rotation
   const rotationSpeed = useRef({
-    x: (Math.random() - 0.5) * 0.05,
-    y: (Math.random() - 0.5) * 0.05,
-    z: (Math.random() - 0.5) * 0.05,
+    x: (Math.random() - 0.5) * 0.02, // Much slower
+    y: (Math.random() - 0.5) * 0.02,
+    z: (Math.random() - 0.5) * 0.02,
   });
 
   useFrame((_, delta) => {

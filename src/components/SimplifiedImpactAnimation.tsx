@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { NeoSummary } from "@/types";
@@ -44,23 +44,45 @@ export default function SimplifiedImpactAnimation({
   // Simple linear path
   const startVec = new THREE.Vector3(...startPosition);
 
-  // Asteroid geometry
-  const asteroidGeometry = new THREE.IcosahedronGeometry(0.25, 2);
+  // Use normalized size for impact animation
+  const normalizedSize = useMemo(() => {
+    const avgDiameter = asteroid.estDiameterMeters.avg;
+    // Same normalization as Asteroid3DModel
+    const minVisualSize = 0.3;
+    const maxVisualSize = 1.2;
+    const minDiameter = 10;
+    const maxDiameter = 5000;
+    const clampedDiameter = Math.max(
+      minDiameter,
+      Math.min(maxDiameter, avgDiameter)
+    );
+    const logMin = Math.log(minDiameter);
+    const logMax = Math.log(maxDiameter);
+    const logValue = Math.log(clampedDiameter);
+    const normalizedValue = (logValue - logMin) / (logMax - logMin);
+    return minVisualSize + normalizedValue * (maxVisualSize - minVisualSize);
+  }, [asteroid]);
+
+  // Asteroid geometry - simple sphere with normalized size
+  const asteroidGeometry = new THREE.IcosahedronGeometry(
+    normalizedSize * 0.5,
+    3
+  );
   const asteroidMaterial = new THREE.MeshStandardMaterial({
-    color: 0x666666,
-    roughness: 0.9,
-    metalness: 0.1,
-    emissive: 0xff4400,
+    color: 0x555555,
+    roughness: 0.95,
+    metalness: 0.05,
+    emissive: 0x000000,
     emissiveIntensity: 0,
   });
 
-  // Trail particles
+  // Trail particles - only show when heating up
   const trailGeometry = new THREE.BufferGeometry();
   const trailMaterial = new THREE.PointsMaterial({
     color: 0xff6600,
-    size: 0.08,
+    size: 0.12,
     transparent: true,
-    opacity: 0.9,
+    opacity: 0, // Start invisible
     blending: THREE.AdditiveBlending,
   });
 
@@ -85,8 +107,8 @@ export default function SimplifiedImpactAnimation({
 
   useFrame((_, delta) => {
     if (phase === "flight") {
-      // Update progress
-      progress.current += delta * 0.4; // 2.5 second flight
+      // Update progress - slower, more artistic (4 seconds)
+      progress.current += delta * 0.25;
 
       if (progress.current >= 1) {
         setPhase("impact");
@@ -104,26 +126,46 @@ export default function SimplifiedImpactAnimation({
       if (asteroidRef.current) {
         asteroidRef.current.position.copy(currentPos);
 
-        // Increase heat glow
-        const heatIntensity = Math.pow(progress.current, 2) * 3;
-        (
-          asteroidRef.current.material as THREE.MeshStandardMaterial
-        ).emissiveIntensity = heatIntensity;
+        // Start glowing and showing trail only after halfway
+        if (progress.current > 0.5) {
+          const heatProgress = (progress.current - 0.5) * 2; // 0 to 1
 
-        // Rotation
-        asteroidRef.current.rotation.x += delta * 3;
-        asteroidRef.current.rotation.y += delta * 2;
+          // Change to orange and start emissive glow
+          const mat = asteroidRef.current
+            .material as THREE.MeshStandardMaterial;
+          mat.emissive.setHex(0xff4400);
+          mat.emissiveIntensity = Math.pow(heatProgress, 1.5) * 2.5;
+
+          // Lerp color from grey to orange-grey
+          const grey = new THREE.Color(0x555555);
+          const orangeGrey = new THREE.Color(0x886644);
+          mat.color.lerpColors(grey, orangeGrey, heatProgress);
+        }
+
+        // Subtle rotation
+        asteroidRef.current.rotation.x += delta * 0.5;
+        asteroidRef.current.rotation.y += delta * 0.3;
+        asteroidRef.current.rotation.z += delta * 0.2;
       }
 
-      // Trail
-      trailPoints.current.push(currentPos.clone());
-      if (trailPoints.current.length > 40) {
-        trailPoints.current.shift();
-      }
+      // Trail only after halfway
+      if (progress.current > 0.5) {
+        trailPoints.current.push(currentPos.clone());
+        if (trailPoints.current.length > 50) {
+          trailPoints.current.shift();
+        }
 
-      if (trailRef.current && trailPoints.current.length > 1) {
-        trailGeometry.setFromPoints(trailPoints.current);
-        trailGeometry.attributes.position.needsUpdate = true;
+        if (trailRef.current) {
+          if (trailPoints.current.length > 1) {
+            trailGeometry.setFromPoints(trailPoints.current);
+            trailGeometry.attributes.position.needsUpdate = true;
+          }
+
+          // Fade in trail
+          const heatProgress = (progress.current - 0.5) * 2;
+          (trailRef.current.material as THREE.PointsMaterial).opacity =
+            Math.min(0.9, heatProgress * 1.5);
+        }
       }
     } else if (phase === "impact") {
       // Impact expansion

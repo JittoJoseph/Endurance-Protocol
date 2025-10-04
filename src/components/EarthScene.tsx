@@ -5,7 +5,7 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Stars } from "@react-three/drei";
 import { EarthMaterial } from "./EarthMaterial";
 import ImpactMarker from "./ImpactMarker";
-import ProceduralAsteroid from "./ProceduralAsteroid";
+import Asteroid3DModel from "./Asteroid3DModel";
 import SimplifiedImpactAnimation from "./SimplifiedImpactAnimation";
 import * as THREE from "three";
 import { SceneCameraController, CameraScene } from "@/lib/sceneCamera";
@@ -22,7 +22,7 @@ interface EarthSceneProps {
 
 /**
  * Earth Component - STATIC position at (0,0,0)
- * Only rotates on Y-axis for day/night cycle
+ * Rotates to face impact point when selected
  */
 const Earth = memo(
   ({
@@ -31,28 +31,56 @@ const Earth = memo(
     rotationPaused,
     impactPoint,
     asteroidSelected,
+    targetRotation,
   }: {
     earthRef: React.MutableRefObject<THREE.Mesh | null>;
     cloudRef: React.MutableRefObject<THREE.Mesh | null>;
     rotationPaused: boolean;
     impactPoint: { lat: number; lon: number } | null;
     asteroidSelected: boolean;
+    targetRotation: number | null;
   }) => {
     const { earthMaterial, cloudsMap } = EarthMaterial();
+    const [isRotatingToTarget, setIsRotatingToTarget] = useState(false);
 
     useFrame((_, delta) => {
-      // Pause Earth rotation when dragging OR when asteroid is selected
-      if (
-        !rotationPaused &&
-        !asteroidSelected &&
-        earthRef.current &&
-        cloudRef.current
-      ) {
-        // Day/night cycle rotation - only when not paused and no asteroid selected
+      if (!earthRef.current || !cloudRef.current) return;
+
+      // Rotate Earth to face impact point
+      if (targetRotation !== null && isRotatingToTarget) {
+        const currentRotation = earthRef.current.rotation.y;
+        const diff = targetRotation - currentRotation;
+
+        // Normalize diff to [-PI, PI]
+        let normalizedDiff = diff;
+        while (normalizedDiff > Math.PI) normalizedDiff -= Math.PI * 2;
+        while (normalizedDiff < -Math.PI) normalizedDiff += Math.PI * 2;
+
+        // Smooth rotation
+        if (Math.abs(normalizedDiff) > 0.01) {
+          const rotationSpeed = normalizedDiff * 2 * delta; // Smooth interpolation
+          earthRef.current.rotation.y += rotationSpeed;
+          cloudRef.current.rotation.y += rotationSpeed * 1.2; // Clouds move slightly faster
+        } else {
+          // Reached target
+          earthRef.current.rotation.y = targetRotation;
+          cloudRef.current.rotation.y = targetRotation;
+          setIsRotatingToTarget(false);
+        }
+      }
+      // Normal day/night rotation
+      else if (!rotationPaused && !asteroidSelected && !isRotatingToTarget) {
         earthRef.current.rotation.y += delta * 0.1;
         cloudRef.current.rotation.y += delta * 0.12;
       }
     });
+
+    // Trigger rotation when impact point changes
+    useEffect(() => {
+      if (impactPoint && targetRotation !== null) {
+        setIsRotatingToTarget(true);
+      }
+    }, [impactPoint, targetRotation]);
 
     return (
       <group position={[0, 0, 0]}>
@@ -253,6 +281,11 @@ export default function EarthScene({
   const cloudRef = useRef<THREE.Mesh>(null);
   const [rotationPaused, setRotationPaused] = useState(false);
 
+  // Calculate target rotation to face impact point toward camera
+  const targetRotation = impactPoint
+    ? Math.atan2(impactPoint.lon, 90) * (Math.PI / 180) + Math.PI / 2
+    : null;
+
   return (
     <div className="w-full h-full">
       <Canvas
@@ -278,18 +311,17 @@ export default function EarthScene({
             rotationPaused={rotationPaused}
             impactPoint={impactPoint}
             asteroidSelected={!!selectedNeo}
+            targetRotation={targetRotation}
           />
 
-          {/* Show asteroid in detail view - positioned on left side */}
-          {selectedNeo &&
-            cameraScene === CameraScene.ASTEROID_DETAIL &&
-            !isImpacting && (
-              <ProceduralAsteroid
-                asteroid={selectedNeo}
-                position={[-10, 2, 0]} // Left side, more visible position
-                autoRotate={true}
-              />
-            )}
+          {/* Show asteroid ALWAYS when selected (before camera moves) */}
+          {selectedNeo && !isImpacting && (
+            <Asteroid3DModel
+              asteroid={selectedNeo}
+              position={[-8, 2, 0]} // Positioned left of Earth
+              autoRotate={true}
+            />
+          )}
 
           {/* Impact animation */}
           {isImpacting && selectedNeo && impactPoint && (

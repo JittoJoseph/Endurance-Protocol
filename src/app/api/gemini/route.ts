@@ -50,11 +50,10 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error calling Gemini API:', error);
     
-    // Return fallback on error
-    const body = await request.json();
+    // Return generic fallback on error
     return NextResponse.json(
       {
-        summary: getFallbackSummary(body.payload),
+        summary: '• High-energy impact event detected.\n• Significant regional destruction expected.\n• Immediate evacuation recommended.\n• Emergency response coordination critical.',
         cached: true,
         error: 'Gemini API unavailable',
       },
