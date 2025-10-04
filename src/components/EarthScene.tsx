@@ -30,19 +30,28 @@ export default function EarthScene({
       }}
       dpr={[1, 2]}
     >
-      {/* Lighting */}
-      <ambientLight intensity={0.15} />
+      {/* Enhanced Lighting Setup */}
+      <ambientLight intensity={0.25} color="#404040" />{" "}
+      {/* Increased ambient for better dark side visibility */}
+      {/* Main Sun Light - positioned to show more night side */}
       <directionalLight
-        position={[5, 3, 5]}
-        intensity={2.5}
+        position={[25, 3, 8]}
+        intensity={2.8}
         color="#ffffff"
         castShadow={false}
       />
+      {/* Fill Light (opposite side for subtle illumination) */}
+      <directionalLight
+        position={[-8, -3, -8]}
+        intensity={0.4}
+        color="#87CEEB"
+        castShadow={false}
+      />
+      {/* Hemisphere Light for natural sky illumination */}
       <hemisphereLight
-        args={["#ffffff", "#080820", 0.3]}
+        args={["#87CEEB", "#1a1a2e", 0.5]}
         position={[0, 50, 0]}
       />
-
       {/* Stars Background */}
       <Stars
         radius={100}
@@ -53,12 +62,10 @@ export default function EarthScene({
         fade
         speed={0.5}
       />
-
       {/* Earth with Materials */}
       <Suspense fallback={null}>
         <Earth onGlobeClick={onGlobeClick} />
       </Suspense>
-
       {/* Impact Marker */}
       {impactLocation && (
         <ImpactMarker
@@ -68,7 +75,6 @@ export default function EarthScene({
           visible={true}
         />
       )}
-
       {/* Camera Controls */}
       <OrbitControls
         enablePan={false}
