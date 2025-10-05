@@ -1,0 +1,68 @@
+[
+  {
+    "name": "Chicxulub Impact",
+    "subtitle": "Dinosaur Extinction Event",
+    "year": -66000000,
+    "location": "Yucatán Peninsula, Mexico",
+    "diameter_m": 10000,
+    "energy_mt": 100000000,
+    "crater_km": 180,
+    "richter_magnitude": 11.3,
+    "description": "Mass extinction event that ended the Cretaceous period"
+  },
+  {
+    "name": "Vredefort Impact",
+    "subtitle": "Largest Verified Impact Structure",
+    "year": -2023000000,
+    "location": "Free State, South Africa",
+    "diameter_m": 15000,
+    "energy_mt": 870000000,
+    "crater_km": 300,
+    "richter_magnitude": 12.0,
+    "description": "Largest verified impact crater on Earth"
+  },
+  {
+    "name": "Tunguska Event",
+    "subtitle": "Largest Impact in Recorded History",
+    "year": 1908,
+    "location": "Siberia, Russia",
+    "diameter_m": 60,
+    "energy_mt": 15,
+    "crater_km": 0,
+    "richter_magnitude": 5.0,
+    "description": "Flattened 2,000 km² of forest, no crater formed (airburst)"
+  },
+  {
+    "name": "Chelyabinsk Meteor",
+    "subtitle": "Most Recent Major Impact",
+    "year": 2013,
+    "location": "Chelyabinsk Oblast, Russia",
+    "diameter_m": 20,
+    "energy_mt": 0.5,
+    "crater_km": 0,
+    "richter_magnitude": 2.7,
+    "description": "Injured 1,500 people from shockwave and shattered glass"
+  },
+  {
+    "name": "Barringer Crater",
+    "subtitle": "Meteor Crater, Arizona",
+    "year": -50000,
+    "location": "Arizona, USA",
+    "diameter_m": 50,
+    "energy_mt": 10,
+    "crater_km": 1.2,
+    "richter_magnitude": 4.5,
+    "description": "Best-preserved impact crater on Earth"
+  },
+  {
+    "name": "Manicouagan Impact",
+    "subtitle": "Eye of Quebec",
+    "year": -214000000,
+    "location": "Quebec, Canada",
+    "diameter_m": 5000,
+    "energy_mt": 8400000,
+    "crater_km": 100,
+    "richter_magnitude": 10.2,
+    "description": "One of Earth's oldest known impact craters"
+  }
+]

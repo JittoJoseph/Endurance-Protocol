@@ -1,0 +1,65 @@
+[
+  {
+    "name": "2011 Tōhoku Earthquake",
+    "year": 2011,
+    "location": "Off the Pacific coast of Japan",
+    "magnitude": 9.1,
+    "energy_mt": 14900,
+    "casualties": 15899,
+    "description": "Triggered devastating tsunami and Fukushima nuclear disaster"
+  },
+  {
+    "name": "2004 Indian Ocean Earthquake",
+    "year": 2004,
+    "location": "Off the west coast of Sumatra, Indonesia",
+    "magnitude": 9.3,
+    "energy_mt": 32000,
+    "casualties": 227898,
+    "description": "Generated massive tsunami affecting 14 countries"
+  },
+  {
+    "name": "1960 Valdivia Earthquake",
+    "year": 1960,
+    "location": "Valdivia, Chile",
+    "magnitude": 9.5,
+    "energy_mt": 67000,
+    "casualties": 1655,
+    "description": "Most powerful earthquake ever recorded"
+  },
+  {
+    "name": "1906 San Francisco Earthquake",
+    "year": 1906,
+    "location": "San Francisco, California, USA",
+    "magnitude": 7.9,
+    "energy_mt": 800,
+    "casualties": 3000,
+    "description": "Destroyed over 80% of San Francisco"
+  },
+  {
+    "name": "2010 Haiti Earthquake",
+    "year": 2010,
+    "location": "Port-au-Prince, Haiti",
+    "magnitude": 7.0,
+    "energy_mt": 160,
+    "casualties": 316000,
+    "description": "Catastrophic damage in densely populated area"
+  },
+  {
+    "name": "1964 Alaska Earthquake",
+    "year": 1964,
+    "location": "Prince William Sound, Alaska, USA",
+    "magnitude": 9.2,
+    "energy_mt": 25000,
+    "casualties": 131,
+    "description": "Most powerful earthquake recorded in North America"
+  },
+  {
+    "name": "2015 Nepal Earthquake",
+    "year": 2015,
+    "location": "Gorkha, Nepal",
+    "magnitude": 7.8,
+    "energy_mt": 560,
+    "casualties": 8964,
+    "description": "Triggered avalanches on Mount Everest"
+  }
+]

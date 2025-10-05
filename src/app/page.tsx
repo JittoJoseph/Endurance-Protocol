@@ -5,7 +5,10 @@ import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import AsteroidCarousel from "@/components/AsteroidCarousel";
 import ImpactStatsModal from "@/components/ImpactStatsModal";
+import LiveFeed from "@/components/LiveFeed";
+import AsteroidDetails from "@/components/AsteroidDetails";
 import { NeoSummary } from "@/types";
+import { getLocationDescription } from "@/lib/geocoding";
 
 // Dynamically import EarthScene to avoid SSR issues
 const EarthScene = dynamic(() => import("@/components/EarthScene"), {
@@ -71,6 +74,9 @@ export default function Home() {
         `Impact point selected: ${lat.toFixed(2)}, ${lon.toFixed(2)}`
       );
       setImpactLocation({ lat, lon });
+      // Get continent/location from coordinates
+      const locationDesc = getLocationDescription(lat, lon);
+      setSelectedCityName(locationDesc);
     }
   };
 
@@ -116,6 +122,21 @@ export default function Home() {
           </p>
         </motion.div>
 
+        {/* Live Feed - Top Right */}
+        <AnimatePresence>
+          {!showDetails && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.8 }}
+              className="absolute top-20 md:top-6 right-4 md:right-8 z-20 pointer-events-auto w-[calc(100%-2rem)] md:w-96 max-w-md"
+            >
+              <LiveFeed onSelectAsteroid={handleSelectNeo} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Top Right - Quit Button (During Location Selection) */}
         <AnimatePresence>
           {showDetails && selectedNeo && !impactLocation && (
@@ -156,7 +177,7 @@ export default function Home() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -50 }}
               transition={{ duration: 0.5 }}
-              className="absolute left-8 top-32 bottom-8 z-20 pointer-events-auto w-80"
+              className="absolute left-4 md:left-8 top-32 md:top-32 bottom-20 md:bottom-8 z-20 pointer-events-auto w-[calc(100%-2rem)] md:w-80 max-w-md"
             >
               <AsteroidCarousel
                 neos={neos}
@@ -167,63 +188,30 @@ export default function Home() {
           )}
         </AnimatePresence>
 
-        {/* Asteroid Name Label (When Selected) - Minimal text below asteroid */}
+        {/* Asteroid Details (When Selected) - Expandable */}
         <AnimatePresence>
           {showDetails && selectedNeo && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className="absolute left-12 top-[60%] z-20 pointer-events-none"
-            >
-              <div className="text-white/40 text-[10px] uppercase tracking-widest mb-1">
-                Target Asteroid
-              </div>
-              <h3 className="text-white text-2xl font-light tracking-wide mb-2">
-                {selectedNeo.name}
-              </h3>
-              <div className="text-white/60 text-sm space-y-1">
-                <div>
-                  Ø {(selectedNeo.estDiameterMeters.avg / 1000).toFixed(2)} km
-                </div>
-                {selectedNeo.closeApproachData?.[0] && (
-                  <div>
-                    {parseFloat(
-                      selectedNeo.closeApproachData[0].relativeVelocity
-                        .kilometersPerSecond
-                    ).toFixed(1)}{" "}
-                    km/s
-                  </div>
-                )}
-              </div>
-              {selectedNeo.isPotentiallyHazardous && (
-                <div className="mt-3 flex items-center gap-2">
-                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                  <span className="text-red-400 text-xs tracking-wide">
-                    POTENTIALLY HAZARDOUS
-                  </span>
-                </div>
-              )}
-            </motion.div>
+            <AsteroidDetails asteroid={selectedNeo} />
           )}
         </AnimatePresence>
 
-        {/* Step Indicator (When Selected) */}
+        {/* Step Indicator (When Selected) - Positioned at top for mobile responsiveness */}
         <AnimatePresence>
           {showDetails && selectedNeo && !impactLocation && (
             <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
               transition={{ duration: 0.5, delay: 0.5 }}
-              className="absolute left-12 bottom-12 z-20 pointer-events-none"
+              className="absolute top-24 left-1/2 -translate-x-1/2 z-20 pointer-events-none text-center px-4"
             >
-              <div className="text-white/60 text-sm mb-2">
-                Step 2: Select Impact Location
-              </div>
-              <div className="text-white/40 text-xs">
-                Click on Earth or choose a city →
+              <div className="bg-black/70 backdrop-blur-md border border-white/20 px-6 py-3 rounded-lg">
+                <div className="text-white/80 text-sm md:text-base mb-1 font-light">
+                  Step 2: Select Impact Location
+                </div>
+                <div className="text-white/50 text-xs">
+                  Click on Earth or choose a city →
+                </div>
               </div>
             </motion.div>
           )}
@@ -237,10 +225,10 @@ export default function Home() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 50 }}
               transition={{ duration: 0.8 }}
-              className="absolute right-8 top-32 z-20 pointer-events-auto w-80"
+              className="absolute right-4 md:right-8 top-32 md:top-32 z-20 pointer-events-auto w-[calc(100%-2rem)] md:w-80 max-w-md"
             >
-              <div className="bg-black/80 backdrop-blur-md border border-white/20 p-6">
-                <h3 className="text-white/60 text-xs font-light mb-4 uppercase tracking-[0.2em]">
+              <div className="bg-black/90 backdrop-blur-xl border border-white/20 p-4 md:p-6 shadow-2xl max-h-[60vh] overflow-y-auto custom-scrollbar">
+                <h3 className="text-white/60 text-xs font-light mb-4 uppercase tracking-[0.2em] sticky top-0 bg-black/90 pb-2">
                   Target Location
                 </h3>
                 <div className="space-y-2">
@@ -319,36 +307,46 @@ export default function Home() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 50 }}
               transition={{ duration: 0.8 }}
-              className="absolute right-8 top-32 z-20 pointer-events-auto w-80"
+              className="absolute right-4 md:right-8 top-32 md:top-32 z-20 pointer-events-auto w-[calc(100%-2rem)] md:w-80 max-w-md"
             >
-              <div className="bg-black/80 backdrop-blur-md border border-white/20 p-6">
-                <h3 className="text-white text-lg font-light tracking-wider mb-4">
+              <div className="bg-black/90 backdrop-blur-xl border border-white/20 p-4 md:p-6 shadow-2xl">
+                <h3 className="text-white text-base md:text-lg font-light tracking-wider mb-3 md:mb-4">
                   Impact Simulation Ready
                 </h3>
-                <p className="text-white/60 text-sm mb-6">
-                  Target: {impactLocation.lat.toFixed(2)}°,{" "}
-                  {impactLocation.lon.toFixed(2)}°
-                </p>
-                <div className="flex gap-3">
+                <div className="bg-white/5 border border-white/10 px-3 py-2 rounded mb-4 md:mb-6">
+                  <div className="text-white/40 text-[10px] uppercase tracking-wider mb-1">
+                    Target
+                  </div>
+                  <p className="text-white/80 text-sm font-mono">
+                    {impactLocation.lat.toFixed(2)}°,{" "}
+                    {impactLocation.lon.toFixed(2)}°
+                  </p>
+                  {selectedCityName && (
+                    <p className="text-white/60 text-xs mt-1">
+                      {selectedCityName}
+                    </p>
+                  )}
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2 md:gap-3">
                   <button
                     onClick={handleImpact}
-                    className="flex-1 border border-red-500/50 hover:border-red-400/80 text-red-400 hover:text-red-300 py-2 px-4 transition-all duration-200 font-light tracking-wider uppercase text-sm"
+                    className="flex-1 border-2 border-red-500/50 hover:border-red-400/80 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 py-3 px-4 transition-all duration-200 font-light tracking-wider uppercase text-sm rounded"
                   >
-                    SIMULATE IMPACT
+                    🎯 Simulate Impact
                   </button>
                   <button
                     onClick={handleReset}
-                    className="px-4 py-2 border border-white/20 hover:border-white/40 text-white/60 hover:text-white transition-all font-light tracking-wider uppercase text-sm"
+                    className="sm:flex-shrink-0 px-4 py-3 border border-white/20 hover:border-white/40 text-white/60 hover:text-white transition-all font-light tracking-wider uppercase text-sm rounded"
                   >
-                    ✕ EXIT
+                    ✕
                   </button>
                 </div>
 
                 <button
                   onClick={() => setImpactLocation(null)}
-                  className="w-full mt-4 py-2 border border-white/20 hover:border-white/40 text-white/60 hover:text-white text-xs uppercase tracking-widest transition-all"
+                  className="w-full mt-3 md:mt-4 py-2 border border-white/20 hover:border-white/40 text-white/60 hover:text-white text-xs uppercase tracking-widest transition-all rounded"
                 >
-                  Change Location
+                  ← Change Location
                 </button>
               </div>
             </motion.div>

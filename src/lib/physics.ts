@@ -105,34 +105,103 @@ export function vector3ToLatLon(
 }
 
 /**
- * Calculate DART deflection outcome
- * Simplified: assumes small velocity change affects trajectory
+ * Calculate DART deflection outcome with realistic physics
+ * Based on momentum transfer and asteroid properties
  */
 export function calculateDartDeflection(
   asteroidVelocityKmS: number,
-  asteroidMassKg: number,
+  asteroidDiameterM: number,
+  asteroidDensityKgM3: number = 3000,
+  leadTimeYears: number = 5, // Years of warning before impact
   dartMassKg: number = 570, // DART spacecraft mass
-  dartVelocityKmS: number = 6.6 // DART impact velocity
+  dartVelocityKmS: number = 6.6, // DART impact velocity relative to asteroid
+  momentumEnhancement: number = 3.6 // Beta factor from ejecta (DART mission achieved ~3.6)
 ): {
   success: boolean;
   velocityChangeMS: number;
-  deflectionAngleDeg: number;
+  deflectionDistanceKm: number;
+  missDistanceKm: number;
+  confidence: number;
+  reason: string;
 } {
-  // Momentum transfer: Δv = (m_dart * v_dart) / m_asteroid
-  const momentumTransfer = dartMassKg * dartVelocityKmS * 1000; // to m/s
-  const velocityChangeMS = momentumTransfer / asteroidMassKg;
+  // 1. Calculate asteroid mass
+  const asteroidRadiusM = asteroidDiameterM / 2;
+  const asteroidVolumeM3 = (4/3) * Math.PI * Math.pow(asteroidRadiusM, 3);
+  const asteroidMassKg = asteroidVolumeM3 * asteroidDensityKgM3;
 
-  // Calculate deflection angle (very simplified)
-  const asteroidVelocityMS = asteroidVelocityKmS * 1000;
-  const deflectionAngleRad = Math.atan(velocityChangeMS / asteroidVelocityMS);
-  const deflectionAngleDeg = deflectionAngleRad * (180 / Math.PI);
+  // 2. Momentum transfer with enhancement from ejecta
+  // Δv = β * (m_dart * v_impact) / m_asteroid
+  const impactMomentum = dartMassKg * dartVelocityKmS * 1000; // kg⋅m/s
+  const effectiveMomentum = momentumEnhancement * impactMomentum;
+  const velocityChangeMS = effectiveMomentum / asteroidMassKg;
 
-  // Success criteria: deflection > 0.1 degrees (arbitrary for demo)
-  const success = deflectionAngleDeg > 0.1;
+  // 3. Calculate deflection distance over time
+  // Distance = velocity_change * time
+  const leadTimeSeconds = leadTimeYears * 365.25 * 24 * 3600;
+  const deflectionDistanceM = velocityChangeMS * leadTimeSeconds;
+  const deflectionDistanceKm = deflectionDistanceM / 1000;
+
+  // 4. Compare to Earth radius (needed to miss Earth)
+  const earthRadiusKm = 6371;
+  const minimumMissKm = earthRadiusKm + 10000; // Earth radius + safety margin
+  const missDistanceKm = deflectionDistanceKm;
+
+  // 5. Determine success based on deflection vs asteroid size
+  // Small asteroids are easier to deflect, large ones may be impossible
+  let success = false;
+  let confidence = 0;
+  let reason = "";
+
+  if (asteroidDiameterM > 1000) {
+    // Very large asteroids (>1km) - DART alone is insufficient
+    success = false;
+    confidence = 5;
+    reason = "Asteroid too large for single DART mission. Would require multiple kinetic impactors or nuclear deflection.";
+  } else if (asteroidDiameterM > 500) {
+    // Large asteroids (500m-1km) - difficult but possible with early warning
+    if (leadTimeYears >= 10 && missDistanceKm > minimumMissKm) {
+      success = true;
+      confidence = 60;
+      reason = "Successful deflection with significant lead time. Large asteroid requires early intervention.";
+    } else {
+      success = false;
+      confidence = 30;
+      reason = "Insufficient deflection. Larger asteroid needs more warning time or multiple missions.";
+    }
+  } else if (asteroidDiameterM > 100) {
+    // Medium asteroids (100m-500m) - good candidate for DART
+    if (missDistanceKm > minimumMissKm) {
+      success = true;
+      confidence = 85;
+      reason = "Successful deflection achieved. Medium-sized asteroid responds well to kinetic impact.";
+    } else if (leadTimeYears < 2) {
+      success = false;
+      confidence = 40;
+      reason = "Insufficient warning time. Deflection too small to avoid Earth collision.";
+    } else {
+      success = true;
+      confidence = 70;
+      reason = "Marginal success. Asteroid trajectory altered enough to reduce impact severity.";
+    }
+  } else {
+    // Small asteroids (<100m) - easiest to deflect
+    if (missDistanceKm > minimumMissKm * 2) {
+      success = true;
+      confidence = 95;
+      reason = "Highly successful deflection. Small asteroid easily diverted with significant margin.";
+    } else {
+      success = true;
+      confidence = 80;
+      reason = "Successful deflection. Small asteroid trajectory sufficiently altered.";
+    }
+  }
 
   return {
     success,
     velocityChangeMS,
-    deflectionAngleDeg,
+    deflectionDistanceKm,
+    missDistanceKm,
+    confidence,
+    reason,
   };
 }

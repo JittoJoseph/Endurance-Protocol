@@ -3,8 +3,10 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { NeoSummary } from "@/types";
-import { calculateImpactMetrics } from "@/lib/physics";
-import Image from "next/image";
+import { calculateImpactMetrics, calculateDartDeflection } from "@/lib/physics";
+import historicalImpacts from "@/data/historical-impacts.json";
+import majorEarthquakes from "@/data/major-earthquakes.json";
+import Tooltip from "./Tooltip";
 
 interface ImpactStatsModalProps {
   isOpen: boolean;
@@ -106,7 +108,7 @@ function ImpactTrajectory({
             top: `calc(50% - ${EARTH_SIZE / 2}px)`,
           }}
         >
-          <Image
+          <img
             src="/earth.png"
             alt="Earth"
             width={EARTH_SIZE}
@@ -124,7 +126,7 @@ function ImpactTrajectory({
               top: `calc(50% - ${ASTEROID_SIZE / 2}px)`,
             }}
           >
-            <Image
+            <img
               src="/sattelite.png"
               alt={asteroidName}
               width={ASTEROID_SIZE}
@@ -341,7 +343,7 @@ function DartTrajectory({
             top: `calc(50% - ${EARTH_SIZE / 2}px)`,
           }}
         >
-          <Image
+          <img
             src="/earth.png"
             alt="Earth"
             width={EARTH_SIZE}
@@ -363,7 +365,7 @@ function DartTrajectory({
               transition: stage === "animating" ? "none" : "opacity 0.4s ease",
             }}
           >
-            <Image
+            <img
               src="/sattelite.png"
               alt={asteroidName}
               width={ASTEROID_SIZE}
@@ -390,7 +392,7 @@ function DartTrajectory({
               transition: stage === "animating" ? "none" : "opacity 0.4s ease",
             }}
           >
-            <Image
+            <img
               src="/dart.png"
               alt="DART spacecraft"
               width={DART_SIZE}
@@ -513,6 +515,15 @@ export default function ImpactStatsModal({
   const [showDartOption, setShowDartOption] = useState(false);
   const [dartStage, setDartStage] = useState<TrajectoryStage>("idle");
   const [impactTrajComplete, setImpactTrajComplete] = useState(false);
+  const [dartResult, setDartResult] = useState<{
+    success: boolean;
+    velocityChangeMS: number;
+    deflectionDistanceKm: number;
+    missDistanceKm: number;
+    confidence: number;
+    reason: string;
+  } | null>(null);
+  const modalScrollRef = useRef<HTMLDivElement>(null);
 
   // Calculate impact metrics
   const avgDiameter = asteroid.estDiameterMeters.avg;
@@ -525,24 +536,58 @@ export default function ImpactStatsModal({
     [avgDiameter, velocity]
   );
 
+  // Auto-show DART button after impact animation completes
   useEffect(() => {
-    if (!geminiAnalysis) return;
-    if (dartStage !== "idle") return;
-
-    if (currentIndex >= geminiAnalysis.summary.length) {
-      const timer = setTimeout(() => setShowDartOption(true), 1200);
-      return () => clearTimeout(timer);
+    if (impactTrajComplete && dartStage === "idle") {
+      setShowDartOption(true);
     }
-  }, [geminiAnalysis, currentIndex, dartStage]);
+  }, [impactTrajComplete, dartStage]);
 
   const handleDartClick = () => {
     setShowDartOption(false);
     setDartStage("animating");
+
+    // Calculate DART deflection outcome
+    const result = calculateDartDeflection(
+      velocity,
+      avgDiameter,
+      3000, // density
+      5 // lead time in years (simulated)
+    );
+    setDartResult(result);
+
+    // Scroll to top of modal
+    if (modalScrollRef.current) {
+      modalScrollRef.current.scrollTo({ top: 0, behavior: "smooth" });
+    }
   };
 
   const handleImpactTrajectoryComplete = useCallback(() => {
     setImpactTrajComplete(true);
   }, []);
+
+  // Find closest historical impact by energy
+  const closestImpact = useMemo(() => {
+    if (dartStage === "complete") return null;
+    const sorted = [...historicalImpacts].sort(
+      (a, b) =>
+        Math.abs(a.energy_mt - metrics.tntMegatons) -
+        Math.abs(b.energy_mt - metrics.tntMegatons)
+    );
+    return sorted[0];
+  }, [metrics.tntMegatons, dartStage]);
+
+  // Find closest earthquake by magnitude
+  const closestEarthquake = useMemo(() => {
+    if (!metrics.seismicEquivalentMagnitude || dartStage === "complete")
+      return null;
+    const sorted = [...majorEarthquakes].sort(
+      (a, b) =>
+        Math.abs(a.magnitude - metrics.seismicEquivalentMagnitude!) -
+        Math.abs(b.magnitude - metrics.seismicEquivalentMagnitude!)
+    );
+    return sorted[0];
+  }, [metrics.seismicEquivalentMagnitude, dartStage]);
 
   // Typewriter effect
   useEffect(() => {
@@ -686,8 +731,8 @@ export default function ImpactStatsModal({
 
   const handleDartComplete = useCallback(() => {
     setDartStage("complete");
-    fetchGeminiAnalysis({ dartSuccess: true });
-  }, [fetchGeminiAnalysis]);
+    fetchGeminiAnalysis({ dartSuccess: dartResult?.success || false });
+  }, [fetchGeminiAnalysis, dartResult]);
 
   return (
     <AnimatePresence>
@@ -704,13 +749,23 @@ export default function ImpactStatsModal({
 
           {/* Modal */}
           <motion.div
+            ref={modalScrollRef}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ type: "spring", duration: 0.5 }}
             className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-4xl max-h-[90vh] overflow-y-auto custom-scrollbar"
           >
-            <div className="bg-black/90 backdrop-blur-xl border border-white/20 p-8">
+            <div className="bg-black/90 backdrop-blur-xl border border-white/20 p-8 relative">
+              {/* Close Button - Top Right */}
+              <button
+                onClick={onClose}
+                className="absolute top-6 right-6 z-20 w-12 h-12 flex items-center justify-center bg-red-500/10 hover:bg-red-500/20 border-2 border-red-500/30 hover:border-red-500/60 text-white/80 hover:text-white text-2xl transition-all rounded-lg shadow-lg hover:shadow-red-500/20"
+                aria-label="Close modal"
+              >
+                ✕
+              </button>
+
               <TrajectoryPanel
                 asteroidName={asteroid.name}
                 dartStage={dartStage}
@@ -718,7 +773,7 @@ export default function ImpactStatsModal({
                 onDartComplete={handleDartComplete}
               />
 
-              {/* Header */}
+              {/* Header with DART Button */}
               <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -732,21 +787,60 @@ export default function ImpactStatsModal({
                     {asteroid.name}
                   </p>
                 </div>
-                <button
-                  onClick={onClose}
-                  className="text-white/60 hover:text-white text-2xl transition-colors"
-                >
-                  ✕
-                </button>
+
+                {/* DART Button - Shows immediately after impact animation */}
+                <AnimatePresence>
+                  {impactTrajComplete && dartStage === "idle" && (
+                    <motion.button
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      onClick={handleDartClick}
+                      className="px-6 py-3 bg-cyan-500/10 border-2 border-cyan-500/50 hover:border-cyan-400 hover:bg-cyan-500/20 text-cyan-400 hover:text-cyan-300 text-sm uppercase tracking-widest transition-all duration-300 flex items-center gap-2 group shadow-lg shadow-cyan-500/20"
+                    >
+                      <span>🛰️</span>
+                      <span className="hidden md:inline">Run DART Defense</span>
+                      <span className="md:hidden">DART</span>
+                      <span className="text-xs opacity-60 group-hover:opacity-100">
+                        →
+                      </span>
+                    </motion.button>
+                  )}
+                </AnimatePresence>
               </motion.div>
+
+              {/* AI Loading Indicator - Show prominently while loading */}
+              {loading && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-6 p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/30 rounded-lg flex items-center gap-4 shadow-lg"
+                >
+                  <div className="relative">
+                    <div className="animate-spin rounded-full h-8 w-8 border-3 border-blue-400 border-t-transparent"></div>
+                    <div className="absolute inset-0 rounded-full bg-blue-400/20 animate-pulse"></div>
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-blue-300 text-sm font-medium mb-1">
+                      🤖 AI Analysis in Progress
+                    </div>
+                    <div className="text-white/50 text-xs">
+                      Google Gemini is analyzing impact scenario and calculating
+                      consequences...
+                    </div>
+                  </div>
+                </motion.div>
+              )}
 
               {/* Impact Metrics Grid - Only show if DART not completed */}
               {dartStage !== "complete" && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                   <div className="bg-white/5 border border-white/10 p-4">
-                    <div className="text-white/40 text-xs uppercase tracking-widest mb-2">
-                      Energy
-                    </div>
+                    <Tooltip content="Energy released on impact. 1 megaton = 4.184 × 10¹⁵ joules, equivalent to 1 million tons of TNT explosive.">
+                      <div className="text-white/40 text-xs uppercase tracking-widest mb-2 border-b border-dotted border-white/30 inline-block cursor-help">
+                        Energy ℹ️
+                      </div>
+                    </Tooltip>
                     <div className="text-white text-2xl font-light">
                       {metrics.tntMegatons.toFixed(1)}
                     </div>
@@ -754,9 +848,11 @@ export default function ImpactStatsModal({
                   </div>
 
                   <div className="bg-white/5 border border-white/10 p-4">
-                    <div className="text-white/40 text-xs uppercase tracking-widest mb-2">
-                      Crater
-                    </div>
+                    <Tooltip content="Estimated crater diameter based on projectile size, velocity, and density using impact scaling laws.">
+                      <div className="text-white/40 text-xs uppercase tracking-widest mb-2 border-b border-dotted border-white/30 inline-block cursor-help">
+                        Crater ℹ️
+                      </div>
+                    </Tooltip>
                     <div className="text-white text-2xl font-light">
                       {metrics.craterDiameterKm.toFixed(1)}
                     </div>
@@ -766,9 +862,11 @@ export default function ImpactStatsModal({
                   </div>
 
                   <div className="bg-white/5 border border-white/10 p-4">
-                    <div className="text-white/40 text-xs uppercase tracking-widest mb-2">
-                      Destruction
-                    </div>
+                    <Tooltip content="Radius of severe structural damage from blast wave and ejecta. Roughly 1.5× crater diameter for heavily damaged zone.">
+                      <div className="text-white/40 text-xs uppercase tracking-widest mb-2 border-b border-dotted border-white/30 inline-block cursor-help">
+                        Destruction ℹ️
+                      </div>
+                    </Tooltip>
                     <div className="text-white text-2xl font-light">
                       {metrics.destructionRadiusKm.toFixed(1)}
                     </div>
@@ -776,9 +874,11 @@ export default function ImpactStatsModal({
                   </div>
 
                   <div className="bg-white/5 border border-white/10 p-4">
-                    <div className="text-white/40 text-xs uppercase tracking-widest mb-2">
-                      Magnitude
-                    </div>
+                    <Tooltip content="Equivalent earthquake magnitude on the Richter scale. Impact energy converted to seismic moment for comparison.">
+                      <div className="text-white/40 text-xs uppercase tracking-widest mb-2 border-b border-dotted border-white/30 inline-block cursor-help">
+                        Magnitude ℹ️
+                      </div>
+                    </Tooltip>
                     <div className="text-white text-2xl font-light">
                       {metrics.seismicEquivalentMagnitude?.toFixed(1) || "N/A"}
                     </div>
@@ -787,15 +887,124 @@ export default function ImpactStatsModal({
                 </div>
               )}
 
+              {/* Historical Comparisons - Only show if DART not completed */}
+              {dartStage !== "complete" &&
+                (closestImpact || closestEarthquake) && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-8 grid md:grid-cols-2 gap-4"
+                  >
+                    {/* Closest Historical Impact */}
+                    {closestImpact && (
+                      <div className="bg-white/5 border border-orange-500/20 p-5">
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-orange-400 text-lg">⚠️</span>
+                          <h3 className="text-white/60 text-xs uppercase tracking-widest">
+                            Similar Historical Impact
+                          </h3>
+                        </div>
+                        <div className="text-white text-lg font-light mb-1">
+                          {closestImpact.name}
+                        </div>
+                        <div className="text-white/40 text-xs mb-3">
+                          {closestImpact.subtitle}
+                        </div>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between text-white/70">
+                            <span>Energy:</span>
+                            <span className="font-mono">
+                              {closestImpact.energy_mt.toLocaleString()} MT
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-white/70">
+                            <span>Crater:</span>
+                            <span className="font-mono">
+                              {closestImpact.crater_km} km
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-white/70">
+                            <span>Year:</span>
+                            <span className="font-mono">
+                              {closestImpact.year < 0
+                                ? `${Math.abs(
+                                    closestImpact.year
+                                  ).toLocaleString()} BCE`
+                                : closestImpact.year}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="mt-3 pt-3 border-t border-white/10 text-white/50 text-xs">
+                          {closestImpact.description}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Closest Earthquake */}
+                    {closestEarthquake && (
+                      <div className="bg-white/5 border border-red-500/20 p-5">
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-red-400 text-lg">🌊</span>
+                          <h3 className="text-white/60 text-xs uppercase tracking-widest">
+                            Seismic Equivalent
+                          </h3>
+                        </div>
+                        <div className="text-white text-lg font-light mb-1">
+                          {closestEarthquake.name}
+                        </div>
+                        <div className="text-white/40 text-xs mb-3">
+                          Magnitude {closestEarthquake.magnitude} •{" "}
+                          {closestEarthquake.year}
+                        </div>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between text-white/70">
+                            <span>Energy:</span>
+                            <span className="font-mono">
+                              {closestEarthquake.energy_mt.toLocaleString()} MT
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-white/70">
+                            <span>Casualties:</span>
+                            <span className="font-mono">
+                              {closestEarthquake.casualties.toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-white/70">
+                            <span>Location:</span>
+                            <span className="text-right text-xs">
+                              {closestEarthquake.location}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="mt-3 pt-3 border-t border-white/10 text-white/50 text-xs">
+                          {closestEarthquake.description}
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+
+              {/* AI Analysis Loading Indicator - Always visible */}
+              {loading && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="mb-8 p-6 bg-blue-500/5 border border-blue-500/20 rounded flex items-center gap-4"
+                >
+                  <div className="animate-spin rounded-full h-6 w-6 border-2 border-blue-400 border-t-transparent"></div>
+                  <div>
+                    <div className="text-blue-300 text-sm font-medium">
+                      Generating AI Analysis...
+                    </div>
+                    <div className="text-white/40 text-xs mt-1">
+                      Using Google Gemini to analyze impact scenario
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
               {/* Gemini AI Analysis */}
-              {loading ? (
-                <div className="text-center py-12">
-                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-                  <p className="text-white/60 mt-4 text-sm">
-                    Analyzing impact scenario...
-                  </p>
-                </div>
-              ) : geminiAnalysis ? (
+              {geminiAnalysis ? (
                 <div className="space-y-6">
                   {/* Summary with typewriter */}
                   <div>
@@ -864,32 +1073,6 @@ export default function ImpactStatsModal({
                     </motion.div>
                   )}
 
-                  {/* DART Defense Button */}
-                  {currentIndex >= geminiAnalysis.summary.length &&
-                    showDartOption &&
-                    impactTrajComplete &&
-                    dartStage === "idle" && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 1.0 }}
-                        className="mt-8 pt-6 border-t border-white/10"
-                      >
-                        <h3 className="text-white/60 text-xs uppercase tracking-widest mb-4">
-                          Planetary Defense Option
-                        </h3>
-                        <button
-                          onClick={handleDartClick}
-                          className="w-full border border-white/20 hover:border-white/40 text-white/60 hover:text-white py-3 px-4 text-xs uppercase tracking-widest transition-all duration-300"
-                        >
-                          Run DART Simulation
-                        </button>
-                        <p className="text-white/40 text-xs mt-3 text-center">
-                          Engage kinetic impactor scenario to attempt deflection
-                        </p>
-                      </motion.div>
-                    )}
-
                   {dartStage === "animating" && (
                     <motion.div
                       initial={{ opacity: 0, y: 12 }}
@@ -900,46 +1083,97 @@ export default function ImpactStatsModal({
                     </motion.div>
                   )}
 
-                  {/* DART Success Message */}
-                  {dartStage === "complete" && (
+                  {/* DART Result Message */}
+                  {dartStage === "complete" && dartResult && (
                     <motion.div
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="mt-8 p-6 bg-green-500/10 border-2 border-green-500/50 rounded-lg"
+                      className={`mt-8 p-6 rounded-lg ${
+                        dartResult.success
+                          ? "bg-green-500/10 border-2 border-green-500/50"
+                          : "bg-red-500/10 border-2 border-red-500/50"
+                      }`}
                     >
                       <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white text-xl">
-                          ✓
+                        <div
+                          className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-xl ${
+                            dartResult.success ? "bg-green-500" : "bg-red-500"
+                          }`}
+                        >
+                          {dartResult.success ? "✓" : "✕"}
                         </div>
                         <div>
-                          <h3 className="text-green-300 font-bold text-lg">
-                            Mission Success
+                          <h3
+                            className={`font-bold text-lg ${
+                              dartResult.success
+                                ? "text-green-300"
+                                : "text-red-300"
+                            }`}
+                          >
+                            {dartResult.success
+                              ? "Mission Success"
+                              : "Mission Failed"}
                           </h3>
-                          <p className="text-green-400/80 text-sm">
-                            Earth impact avoided
+                          <p
+                            className={`text-sm ${
+                              dartResult.success
+                                ? "text-green-400/80"
+                                : "text-red-400/80"
+                            }`}
+                          >
+                            {dartResult.success
+                              ? `Earth impact avoided (${dartResult.confidence}% confidence)`
+                              : `Deflection insufficient (${dartResult.confidence}% confidence)`}
                           </p>
                         </div>
                       </div>
-                      <p className="text-white/70 text-sm">
-                        The DART spacecraft intercepted {asteroid.name} and
-                        altered its trajectory. The asteroid is now on a safe
-                        course away from Earth.
+                      <p className="text-white/70 text-sm mb-4">
+                        {dartResult.reason}
                       </p>
-                      <div className="mt-4 p-3 bg-black/30 rounded">
-                        <div className="text-white/60 text-xs uppercase tracking-widest mb-2">
+                      <div className="p-3 bg-black/30 rounded">
+                        <div className="text-white/60 text-xs uppercase tracking-widest mb-3">
                           Deflection Metrics
                         </div>
-                        <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div className="grid grid-cols-2 gap-4 text-sm">
                           <div>
-                            <div className="text-cyan-300">Velocity change</div>
-                            <div className="text-white">≈ 0.5 km/s</div>
-                          </div>
-                          <div>
-                            <div className="text-cyan-300">
-                              Closest approach
+                            <div className="text-cyan-300 text-xs mb-1">
+                              Velocity Change
                             </div>
-                            <div className="text-white">≈ 50,000 km</div>
+                            <div className="text-white font-mono">
+                              {(dartResult.velocityChangeMS * 1000).toFixed(2)}{" "}
+                              mm/s
+                            </div>
                           </div>
+                          <div>
+                            <div className="text-cyan-300 text-xs mb-1">
+                              Deflection Distance
+                            </div>
+                            <div className="text-white font-mono">
+                              {dartResult.deflectionDistanceKm.toLocaleString()}{" "}
+                              km
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-cyan-300 text-xs mb-1">
+                              Miss Distance
+                            </div>
+                            <div className="text-white font-mono">
+                              {dartResult.missDistanceKm.toLocaleString()} km
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-cyan-300 text-xs mb-1">
+                              Asteroid Size
+                            </div>
+                            <div className="text-white font-mono">
+                              {(avgDiameter / 1000).toFixed(2)} km
+                            </div>
+                          </div>
+                        </div>
+                        <div className="mt-3 pt-3 border-t border-white/10 text-white/50 text-xs">
+                          <strong>Note:</strong> Calculation assumes 5 years
+                          warning time, β=3.6 momentum enhancement (DART mission
+                          value), and 3000 kg/m³ asteroid density.
                         </div>
                       </div>
                     </motion.div>

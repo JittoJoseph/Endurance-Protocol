@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
 
     // Try gemini-2.5-flash-lite first (lighter, faster)
     try {
-      const liteModel = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-lite' });
+      const liteModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
       const result = await liteModel.generateContent(prompt);
       const response = await result.response;
       const summary = response.text();
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
       console.warn('Flash-lite overloaded, falling back to flash:', liteError);
       
       // Fallback to gemini-2.5-flash
-      const flashModel = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+      const flashModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
       const result = await flashModel.generateContent(prompt);
       const response = await result.response;
       const summary = response.text();
