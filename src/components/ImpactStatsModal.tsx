@@ -512,7 +512,6 @@ export default function ImpactStatsModal({
   const [loading, setLoading] = useState(true);
   const [displayedText, setDisplayedText] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [showDartOption, setShowDartOption] = useState(false);
   const [dartStage, setDartStage] = useState<TrajectoryStage>("idle");
   const [impactTrajComplete, setImpactTrajComplete] = useState(false);
   const [dartResult, setDartResult] = useState<{
@@ -539,12 +538,11 @@ export default function ImpactStatsModal({
   // Auto-show DART button after impact animation completes
   useEffect(() => {
     if (impactTrajComplete && dartStage === "idle") {
-      setShowDartOption(true);
+      // DART button is now shown directly in JSX
     }
   }, [impactTrajComplete, dartStage]);
 
   const handleDartClick = () => {
-    setShowDartOption(false);
     setDartStage("animating");
 
     // Calculate DART deflection outcome
@@ -611,7 +609,7 @@ export default function ImpactStatsModal({
       setCurrentIndex(0);
 
       if (options?.dartSuccess) {
-        setShowDartOption(false);
+        // DART option no longer needed after completion
       }
 
       try {
@@ -724,7 +722,6 @@ export default function ImpactStatsModal({
     }
 
     setDartStage("idle");
-    setShowDartOption(false);
     setImpactTrajComplete(false);
     fetchGeminiAnalysis();
   }, [isOpen, fetchGeminiAnalysis]);
