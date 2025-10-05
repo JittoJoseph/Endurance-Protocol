@@ -22,6 +22,94 @@
     "description": "Largest verified impact crater on Earth"
   },
   {
+    "name": "Sudbury Basin Impact",
+    "subtitle": "World's Second Largest Crater",
+    "year": -1850000000,
+    "location": "Ontario, Canada",
+    "diameter_m": 13000,
+    "energy_mt": 420000000,
+    "crater_km": 250,
+    "richter_magnitude": 11.8,
+    "description": "Contains world's largest nickel deposits"
+  },
+  {
+    "name": "Popigai Impact",
+    "subtitle": "Diamond-Bearing Crater",
+    "year": -35000000,
+    "location": "Siberia, Russia",
+    "diameter_m": 8000,
+    "energy_mt": 16000000,
+    "crater_km": 100,
+    "richter_magnitude": 10.6,
+    "description": "Contains impact diamonds, one of the largest craters in Russia"
+  },
+  {
+    "name": "Manicouagan Impact",
+    "subtitle": "Eye of Quebec",
+    "year": -214000000,
+    "location": "Quebec, Canada",
+    "diameter_m": 5000,
+    "energy_mt": 8400000,
+    "crater_km": 100,
+    "richter_magnitude": 10.2,
+    "description": "One of Earth's oldest known impact craters"
+  },
+  {
+    "name": "Acraman Impact",
+    "subtitle": "Australia's Largest Crater",
+    "year": -580000000,
+    "location": "South Australia",
+    "diameter_m": 4000,
+    "energy_mt": 4200000,
+    "crater_km": 90,
+    "richter_magnitude": 9.8,
+    "description": "Partially eroded but still visible impact structure"
+  },
+  {
+    "name": "Chesapeake Bay Impact",
+    "subtitle": "Submerged Crater",
+    "year": -35000000,
+    "location": "Virginia, USA",
+    "diameter_m": 3000,
+    "energy_mt": 2100000,
+    "crater_km": 85,
+    "richter_magnitude": 9.6,
+    "description": "Largest crater formed in the U.S. during the past 35 million years"
+  },
+  {
+    "name": "Morokweng Impact",
+    "subtitle": "Southern Africa's Largest Crater",
+    "year": -145000000,
+    "location": "North West Province, South Africa",
+    "diameter_m": 2500,
+    "energy_mt": 1200000,
+    "crater_km": 70,
+    "richter_magnitude": 9.3,
+    "description": "One of the best-preserved large impact structures on Earth"
+  },
+  {
+    "name": "Kara Impact",
+    "subtitle": "Twin Crater Structure",
+    "year": -70000000,
+    "location": "Nizhny Novgorod Oblast, Russia",
+    "diameter_m": 2000,
+    "energy_mt": 600000,
+    "crater_km": 65,
+    "richter_magnitude": 9.0,
+    "description": "Consists of two overlapping craters"
+  },
+  {
+    "name": "Puchezh-Katunki Impact",
+    "subtitle": "Complex Crater Structure",
+    "year": -167000000,
+    "location": "Kostroma Oblast, Russia",
+    "diameter_m": 2000,
+    "energy_mt": 600000,
+    "crater_km": 40,
+    "richter_magnitude": 9.0,
+    "description": "Central uplift crater with well-preserved structure"
+  },
+  {
     "name": "Tunguska Event",
     "subtitle": "Largest Impact in Recorded History",
     "year": 1908,
@@ -31,6 +119,39 @@
     "crater_km": 0,
     "richter_magnitude": 5.0,
     "description": "Flattened 2,000 km² of forest, no crater formed (airburst)"
+  },
+  {
+    "name": "Sikhote-Alin Meteorite",
+    "subtitle": "Largest Iron Meteorite Fall",
+    "year": 1947,
+    "location": "Primorsky Krai, Russia",
+    "diameter_m": 4,
+    "energy_mt": 0.3,
+    "crater_km": 0,
+    "richter_magnitude": 3.2,
+    "description": "Created over 100 small craters, fragments still found today"
+  },
+  {
+    "name": "Innisfree Meteorite",
+    "subtitle": "Lake Impact",
+    "year": 1977,
+    "location": "Alberta, Canada",
+    "diameter_m": 3,
+    "energy_mt": 0.15,
+    "crater_km": 0,
+    "richter_magnitude": 3.0,
+    "description": "Impacted a small lake, fragments recovered from bottom"
+  },
+  {
+    "name": "Peekskill Meteorite",
+    "subtitle": "Car-Chasing Meteor",
+    "year": 1992,
+    "location": "Peekskill, New York, USA",
+    "diameter_m": 4,
+    "energy_mt": 0.3,
+    "crater_km": 0,
+    "richter_magnitude": 3.2,
+    "description": "Witnessed by thousands, fragments hit parked cars"
   },
   {
     "name": "Chelyabinsk Meteor",
@@ -44,6 +165,28 @@
     "description": "Injured 1,500 people from shockwave and shattered glass"
   },
   {
+    "name": "Vitim Bolide",
+    "subtitle": "Russian Fireball",
+    "year": 2002,
+    "location": "Irkutsk Oblast, Russia",
+    "diameter_m": 6,
+    "energy_mt": 0.05,
+    "crater_km": 0,
+    "richter_magnitude": 2.2,
+    "description": "Bright fireball seen across Siberia, no fragments recovered"
+  },
+  {
+    "name": "Tagish Lake Meteorite",
+    "subtitle": "Carbonaceous Chondrite",
+    "year": 2000,
+    "location": "British Columbia, Canada",
+    "diameter_m": 4,
+    "energy_mt": 0.2,
+    "crater_km": 0,
+    "richter_magnitude": 3.1,
+    "description": "Fragments recovered from frozen lake, pristine condition"
+  },
+  {
     "name": "Barringer Crater",
     "subtitle": "Meteor Crater, Arizona",
     "year": -50000,
@@ -55,14 +198,58 @@
     "description": "Best-preserved impact crater on Earth"
   },
   {
-    "name": "Manicouagan Impact",
-    "subtitle": "Eye of Quebec",
-    "year": -214000000,
-    "location": "Quebec, Canada",
-    "diameter_m": 5000,
-    "energy_mt": 8400000,
-    "crater_km": 100,
-    "richter_magnitude": 10.2,
-    "description": "One of Earth's oldest known impact craters"
+    "name": "Henbury Meteorites",
+    "subtitle": "Australian Impact Field",
+    "year": -4700,
+    "location": "Northern Territory, Australia",
+    "diameter_m": 2,
+    "energy_mt": 0.01,
+    "crater_km": 0.157,
+    "richter_magnitude": 1.8,
+    "description": "Field of 13 craters from iron meteorite fragments"
+  },
+  {
+    "name": "Wabar Impact",
+    "subtitle": "Saudi Arabian Craters",
+    "year": 1863,
+    "location": "Rub' al Khali, Saudi Arabia",
+    "diameter_m": 11,
+    "energy_mt": 0.08,
+    "crater_km": 0.1,
+    "richter_magnitude": 2.4,
+    "description": "Two craters in the Empty Quarter desert"
+  },
+  {
+    "name": "Kamil Crater",
+    "subtitle": "Egyptian Impact",
+    "year": 2008,
+    "location": "Egypt",
+    "diameter_m": 45,
+    "energy_mt": 4.5,
+    "crater_km": 0.045,
+    "richter_magnitude": 3.8,
+    "description": "Fresh crater discovered in 2008, still visible"
+  },
+  {
+    "name": "Carancas Impact",
+    "subtitle": "Lake Titicaca Region",
+    "year": 2007,
+    "location": "Peru",
+    "diameter_m": 1.5,
+    "energy_mt": 0.003,
+    "crater_km": 0.014,
+    "richter_magnitude": 1.5,
+    "description": "Created a crater in a dry lake bed, caused illness from toxic gases"
+  },
+  {
+    "name": "Whitecourt Meteorite",
+    "subtitle": "Alberta Impact",
+    "year": 2008,
+    "location": "Alberta, Canada",
+    "diameter_m": 2,
+    "energy_mt": 0.008,
+    "crater_km": 0.036,
+    "richter_magnitude": 1.7,
+    "description": "Created a crater in a farmer's field"
   }
 ]

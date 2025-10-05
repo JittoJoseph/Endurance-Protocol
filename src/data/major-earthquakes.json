@@ -1,12 +1,12 @@
 [
   {
-    "name": "2011 Tōhoku Earthquake",
-    "year": 2011,
-    "location": "Off the Pacific coast of Japan",
-    "magnitude": 9.1,
-    "energy_mt": 14900,
-    "casualties": 15899,
-    "description": "Triggered devastating tsunami and Fukushima nuclear disaster"
+    "name": "1960 Valdivia Earthquake",
+    "year": 1960,
+    "location": "Valdivia, Chile",
+    "magnitude": 9.5,
+    "energy_mt": 67000,
+    "casualties": 1655,
+    "description": "Most powerful earthquake ever recorded"
   },
   {
     "name": "2004 Indian Ocean Earthquake",
@@ -18,22 +18,121 @@
     "description": "Generated massive tsunami affecting 14 countries"
   },
   {
-    "name": "1960 Valdivia Earthquake",
-    "year": 1960,
-    "location": "Valdivia, Chile",
-    "magnitude": 9.5,
-    "energy_mt": 67000,
-    "casualties": 1655,
-    "description": "Most powerful earthquake ever recorded"
+    "name": "1964 Alaska Earthquake",
+    "year": 1964,
+    "location": "Prince William Sound, Alaska, USA",
+    "magnitude": 9.2,
+    "energy_mt": 25000,
+    "casualties": 131,
+    "description": "Most powerful earthquake recorded in North America"
   },
   {
-    "name": "1906 San Francisco Earthquake",
-    "year": 1906,
-    "location": "San Francisco, California, USA",
-    "magnitude": 7.9,
-    "energy_mt": 800,
-    "casualties": 3000,
-    "description": "Destroyed over 80% of San Francisco"
+    "name": "2011 Tōhoku Earthquake",
+    "year": 2011,
+    "location": "Off the Pacific coast of Japan",
+    "magnitude": 9.1,
+    "energy_mt": 14900,
+    "casualties": 15899,
+    "description": "Triggered devastating tsunami and Fukushima nuclear disaster"
+  },
+  {
+    "name": "1952 Kamchatka Earthquake",
+    "year": 1952,
+    "location": "Kamchatka Peninsula, Russia",
+    "magnitude": 9.0,
+    "energy_mt": 11000,
+    "casualties": 0,
+    "description": "Undersea earthquake with tsunami affecting Pacific coast"
+  },
+  {
+    "name": "2005 Nias-Simeulue Earthquake",
+    "year": 2005,
+    "location": "Off the west coast of Sumatra, Indonesia",
+    "magnitude": 8.6,
+    "energy_mt": 4000,
+    "casualties": 1313,
+    "description": "Part of the 2004-2005 Sumatra-Andaman earthquake sequence"
+  },
+  {
+    "name": "2012 Indian Ocean Earthquake",
+    "year": 2012,
+    "location": "Off the west coast of Sumatra, Indonesia",
+    "magnitude": 8.6,
+    "energy_mt": 4000,
+    "casualties": 10,
+    "description": "Triggered tsunami warnings across Indian Ocean"
+  },
+  {
+    "name": "2007 Sumatra Earthquake",
+    "year": 2007,
+    "location": "Off the west coast of Sumatra, Indonesia",
+    "magnitude": 8.5,
+    "energy_mt": 3200,
+    "casualties": 25,
+    "description": "Aftershock of the 2004 Indian Ocean earthquake"
+  },
+  {
+    "name": "1965 Rat Islands Earthquake",
+    "year": 1965,
+    "location": "Rat Islands, Alaska, USA",
+    "magnitude": 8.7,
+    "energy_mt": 5000,
+    "casualties": 0,
+    "description": "Undersea earthquake in the Aleutian Islands"
+  },
+  {
+    "name": "2013 Sea of Okhotsk Earthquake",
+    "year": 2013,
+    "location": "Sea of Okhotsk, Russia",
+    "magnitude": 8.3,
+    "energy_mt": 1800,
+    "casualties": 0,
+    "description": "Deep undersea earthquake with minor tsunami"
+  },
+  {
+    "name": "2009 Samoa Earthquake",
+    "year": 2009,
+    "location": "Samoa Islands region",
+    "magnitude": 8.1,
+    "energy_mt": 1000,
+    "casualties": 189,
+    "description": "Triggered tsunami affecting Samoa, American Samoa, and Tonga"
+  },
+  {
+    "name": "2010 Chile Earthquake",
+    "year": 2010,
+    "location": "Maule, Chile",
+    "magnitude": 8.8,
+    "energy_mt": 7000,
+    "casualties": 525,
+    "description": "Affected central Chile, caused significant damage to infrastructure"
+  },
+  {
+    "name": "2003 Hokkaido Earthquake",
+    "year": 2003,
+    "location": "Hokkaido, Japan",
+    "magnitude": 8.3,
+    "energy_mt": 1800,
+    "casualties": 0,
+    "description": "Offshore earthquake with tsunami affecting Hokkaido coast"
+  },
+  {
+    "name": "1998 Papua New Guinea Earthquake",
+    "year": 1998,
+    "location": "Papua New Guinea",
+    "magnitude": 7.0,
+    "energy_mt": 160,
+    "casualties": 2183,
+    "description": "Triggered landslides that destroyed entire villages"
+  },
+  {
+    "name": "2015 Nepal Earthquake",
+    "year": 2015,
+    "location": "Gorkha, Nepal",
+    "magnitude": 7.8,
+    "energy_mt": 560,
+    "casualties": 8964,
+    "description": "Triggered avalanches on Mount Everest"
   },
   {
     "name": "2010 Haiti Earthquake",
@@ -45,21 +144,228 @@
     "description": "Catastrophic damage in densely populated area"
   },
   {
-    "name": "1964 Alaska Earthquake",
-    "year": 1964,
-    "location": "Prince William Sound, Alaska, USA",
-    "magnitude": 9.2,
-    "energy_mt": 25000,
-    "casualties": 131,
-    "description": "Most powerful earthquake recorded in North America"
+    "name": "2008 Sichuan Earthquake",
+    "year": 2008,
+    "location": "Sichuan Province, China",
+    "magnitude": 7.9,
+    "energy_mt": 800,
+    "casualties": 87476,
+    "description": "Destroyed schools and infrastructure, massive death toll"
   },
   {
-    "name": "2015 Nepal Earthquake",
-    "year": 2015,
-    "location": "Gorkha, Nepal",
+    "name": "2005 Kashmir Earthquake",
+    "year": 2005,
+    "location": "Kashmir region, Pakistan",
+    "magnitude": 7.6,
+    "energy_mt": 400,
+    "casualties": 87351,
+    "description": "Affected Pakistan, India, and Afghanistan"
+  },
+  {
+    "name": "1999 İzmit Earthquake",
+    "year": 1999,
+    "location": "İzmit, Turkey",
+    "magnitude": 7.6,
+    "energy_mt": 400,
+    "casualties": 17127,
+    "description": "Struck during morning rush hour, destroyed Istanbul suburbs"
+  },
+  {
+    "name": "1995 Kobe Earthquake",
+    "year": 1995,
+    "location": "Kobe, Japan",
+    "magnitude": 6.9,
+    "energy_mt": 120,
+    "casualties": 6434,
+    "description": "Struck densely populated urban area, caused fires and liquefaction"
+  },
+  {
+    "name": "1989 Loma Prieta Earthquake",
+    "year": 1989,
+    "location": "Santa Cruz Mountains, California, USA",
+    "magnitude": 6.9,
+    "energy_mt": 120,
+    "casualties": 63,
+    "description": "Interrupted World Series broadcast, caused Bay Bridge damage"
+  },
+  {
+    "name": "1985 Mexico City Earthquake",
+    "year": 1985,
+    "location": "Mexico City, Mexico",
+    "magnitude": 8.0,
+    "energy_mt": 900,
+    "casualties": 10000,
+    "description": "Epicenter offshore, but amplified in soft lakebed soil of Mexico City"
+  },
+  {
+    "name": "1976 Tangshan Earthquake",
+    "year": 1976,
+    "location": "Tangshan, China",
+    "magnitude": 7.6,
+    "energy_mt": 400,
+    "casualties": 242769,
+    "description": "Struck at 3:42 AM, destroyed entire city"
+  },
+  {
+    "name": "1971 San Fernando Earthquake",
+    "year": 1971,
+    "location": "San Fernando Valley, California, USA",
+    "magnitude": 6.6,
+    "energy_mt": 80,
+    "casualties": 65,
+    "description": "Caused collapse of freeway overpasses"
+  },
+  {
+    "name": "1906 San Francisco Earthquake",
+    "year": 1906,
+    "location": "San Francisco, California, USA",
+    "magnitude": 7.9,
+    "energy_mt": 800,
+    "casualties": 3000,
+    "description": "Destroyed over 80% of San Francisco"
+  },
+  {
+    "name": "1896 Sanriku Earthquake",
+    "year": 1896,
+    "location": "Sanriku coast, Japan",
+    "magnitude": 8.5,
+    "energy_mt": 3200,
+    "casualties": 27121,
+    "description": "Generated tsunami that devastated coastal villages"
+  },
+  {
+    "name": "1886 Charleston Earthquake",
+    "year": 1886,
+    "location": "Charleston, South Carolina, USA",
+    "magnitude": 7.3,
+    "energy_mt": 250,
+    "casualties": 60,
+    "description": "Most damaging earthquake in U.S. history at the time"
+  },
+  {
+    "name": "1811-1812 New Madrid Earthquakes",
+    "year": 1811,
+    "location": "New Madrid, Missouri, USA",
+    "magnitude": 8.1,
+    "energy_mt": 1000,
+    "casualties": 0,
+    "description": "Series of three massive earthquakes in sparsely populated area"
+  },
+  {
+    "name": "1755 Lisbon Earthquake",
+    "year": 1755,
+    "location": "Lisbon, Portugal",
+    "magnitude": 8.7,
+    "energy_mt": 5000,
+    "casualties": 60000,
+    "description": "Destroyed Lisbon, triggered tsunami across Atlantic"
+  },
+  {
+    "name": "1556 Shaanxi Earthquake",
+    "year": 1556,
+    "location": "Shaanxi Province, China",
+    "magnitude": 8.0,
+    "energy_mt": 900,
+    "casualties": 830000,
+    "description": "Deadliest earthquake in recorded history"
+  },
+  {
+    "name": "2018 Lombok Earthquake",
+    "year": 2018,
+    "location": "Lombok, Indonesia",
+    "magnitude": 7.0,
+    "energy_mt": 160,
+    "casualties": 563,
+    "description": "Series of earthquakes affecting tourist island"
+  },
+  {
+    "name": "2016 Kaikōura Earthquake",
+    "year": 2016,
+    "location": "Kaikōura, New Zealand",
     "magnitude": 7.8,
     "energy_mt": 560,
-    "casualties": 8964,
-    "description": "Triggered avalanches on Mount Everest"
+    "casualties": 2,
+    "description": "Complex rupture along multiple faults"
+  },
+  {
+    "name": "2014 Iquique Earthquake",
+    "year": 2014,
+    "location": "Iquique, Chile",
+    "magnitude": 8.2,
+    "energy_mt": 1400,
+    "casualties": 6,
+    "description": "Long buildup before rupture, minimal casualties due to warnings"
+  },
+  {
+    "name": "2006 Pangandaran Earthquake",
+    "year": 2006,
+    "location": "Java, Indonesia",
+    "magnitude": 7.7,
+    "energy_mt": 500,
+    "casualties": 668,
+    "description": "Struck popular tourist area, caused significant tsunami"
+  },
+  {
+    "name": "1994 Northridge Earthquake",
+    "year": 1994,
+    "location": "Northridge, California, USA",
+    "magnitude": 6.7,
+    "energy_mt": 100,
+    "casualties": 72,
+    "description": "Struck at 4:31 AM, caused $40 billion in damage"
+  },
+  {
+    "name": "1988 Spitak Earthquake",
+    "year": 1988,
+    "location": "Spitak, Armenia",
+    "magnitude": 6.8,
+    "energy_mt": 110,
+    "casualties": 25000,
+    "description": "Struck during morning hours, destroyed Soviet-era apartment buildings"
+  },
+  {
+    "name": "1978 Tabas Earthquake",
+    "year": 1978,
+    "location": "Tabas, Iran",
+    "magnitude": 7.4,
+    "energy_mt": 300,
+    "casualties": 15000,
+    "description": "Struck remote desert area, destroyed mud-brick homes"
+  },
+  {
+    "name": "1939 Erzincan Earthquake",
+    "year": 1939,
+    "location": "Erzincan, Turkey",
+    "magnitude": 7.8,
+    "energy_mt": 560,
+    "casualties": 32968,
+    "description": "Struck at night, destroyed city of Erzincan"
+  },
+  {
+    "name": "1923 Great Kantō Earthquake",
+    "year": 1923,
+    "location": "Kantō region, Japan",
+    "magnitude": 7.9,
+    "energy_mt": 800,
+    "casualties": 142807,
+    "description": "Followed by fires that destroyed Tokyo and Yokohama"
+  },
+  {
+    "name": "1915 Avezzano Earthquake",
+    "year": 1915,
+    "location": "Avezzano, Italy",
+    "magnitude": 7.0,
+    "energy_mt": 160,
+    "casualties": 32998,
+    "description": "Destroyed medieval town, one of Italy's deadliest earthquakes"
+  },
+  {
+    "name": "1908 Messina Earthquake",
+    "year": 1908,
+    "location": "Messina, Italy",
+    "magnitude": 7.1,
+    "energy_mt": 180,
+    "casualties": 82000,
+    "description": "Struck at 5:20 AM, destroyed Messina and Reggio Calabria"
   }
 ]
