@@ -143,7 +143,7 @@ export default function Earth({ onGlobeClick, impactLocation }: EarthProps) {
       earthRef.current.rotation.y += delta * 0.05; // Slow rotation
     }
     if (cloudsRef.current) {
-      cloudsRef.current.rotation.y += delta * 0.09; // Clouds moderately faster
+      cloudsRef.current.rotation.y += delta * 0.065; // Clouds slower than Earth
     }
   });
 
