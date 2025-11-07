@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { NeoSummary } from "@/types";
 import { calculateImpactMetrics, calculateDartDeflection } from "@/lib/physics";
 import historicalImpacts from "@/data/historical-impacts.json";
-import majorEarthquakes from "@/data/major-earthquakes.json";
+import majorEarthquakes from "@/data/major-earthquakes-expanded.json";
 import Tooltip from "./Tooltip";
 
 interface ImpactStatsModalProps {
@@ -564,28 +564,112 @@ export default function ImpactStatsModal({
     setImpactTrajComplete(true);
   }, []);
 
-  // Find closest historical impact by energy
+  // Find closest historical impact with improved matching
   const closestImpact = useMemo(() => {
     if (dartStage === "complete") return null;
-    const sorted = [...historicalImpacts].sort(
-      (a, b) =>
-        Math.abs(a.energy_mt - metrics.tntMegatons) -
-        Math.abs(b.energy_mt - metrics.tntMegatons)
-    );
-    return sorted[0];
-  }, [metrics.tntMegatons, dartStage]);
 
-  // Find closest earthquake by magnitude
+    const targetEnergy = metrics.tntMegatons;
+    const targetCrater = metrics.craterDiameterKm;
+
+    // Calculate scores based on multiple factors
+    const scored = historicalImpacts.map((impact) => {
+      const energyDiff = Math.abs(impact.energy_mt - targetEnergy);
+      const craterDiff = Math.abs(impact.crater_km - targetCrater);
+
+      // Normalize differences by typical ranges
+      const energyScore = Math.min(energyDiff / Math.max(targetEnergy, 1), 1);
+      const craterScore = Math.min(craterDiff / Math.max(targetCrater, 1), 1);
+
+      // Weighted score (energy more important than crater size)
+      const totalScore = energyScore * 0.7 + craterScore * 0.3;
+
+      return { ...impact, score: totalScore };
+    });
+
+    // Sort by score and return top 3 for variety, then pick the best one
+    const sorted = scored.sort((a, b) => a.score - b.score);
+
+    // To ensure variety, prefer impacts that aren't too clustered in energy
+    // If the top match is very close, use it; otherwise look for better variety
+    if (sorted.length > 1 && sorted[0].score < 0.1) {
+      return sorted[0]; // Very close match
+    }
+
+    // Look for a good match that's not in the same energy decade
+    const topMatch = sorted[0];
+    const energyDecade = Math.floor(Math.log10(topMatch.energy_mt));
+
+    for (let i = 1; i < Math.min(5, sorted.length); i++) {
+      const candidate = sorted[i];
+      const candidateDecade = Math.floor(Math.log10(candidate.energy_mt));
+      if (
+        Math.abs(energyDecade - candidateDecade) >= 1 &&
+        candidate.score < 0.5
+      ) {
+        return candidate; // Different energy scale, reasonable match
+      }
+    }
+
+    return topMatch; // Fallback to best match
+  }, [metrics.tntMegatons, metrics.craterDiameterKm, dartStage]);
+
+  // Find closest earthquake with improved matching
   const closestEarthquake = useMemo(() => {
     if (!metrics.seismicEquivalentMagnitude || dartStage === "complete")
       return null;
-    const sorted = [...majorEarthquakes].sort(
-      (a, b) =>
-        Math.abs(a.magnitude - metrics.seismicEquivalentMagnitude!) -
-        Math.abs(b.magnitude - metrics.seismicEquivalentMagnitude!)
+
+    const targetMagnitude = metrics.seismicEquivalentMagnitude;
+    const targetEnergy = metrics.tntMegatons;
+
+    // Calculate scores based on multiple factors
+    const scored = majorEarthquakes.map((earthquake) => {
+      const magDiff = Math.abs(earthquake.magnitude - targetMagnitude);
+      const energyDiff = Math.abs(earthquake.energy_mt - targetEnergy);
+
+      // Normalize differences
+      const magScore = Math.min(magDiff / 2, 1); // Magnitude differences up to 2 are significant
+      const energyScore = Math.min(energyDiff / Math.max(targetEnergy, 1), 1);
+
+      // Weighted score (magnitude more important for seismic comparison)
+      const totalScore = magScore * 0.6 + energyScore * 0.4;
+
+      return { ...earthquake, score: totalScore };
+    });
+
+    // Sort by score and ensure variety
+    const sorted = scored.sort((a, b) => a.score - b.score);
+
+    // Prefer earthquakes with significant impact/casualties for comparison
+    const impactful = sorted.filter(
+      (eq) => eq.casualties > 100 || eq.magnitude >= 7.5
     );
+
+    if (impactful.length > 0) {
+      const topImpactful = impactful[0];
+
+      // If top match is very close, use it
+      if (topImpactful.score < 0.15) {
+        return topImpactful;
+      }
+
+      // Look for variety in magnitude range
+      const topMag = topImpactful.magnitude;
+      for (let i = 1; i < Math.min(8, impactful.length); i++) {
+        const candidate = impactful[i];
+        if (
+          Math.abs(candidate.magnitude - topMag) >= 0.5 &&
+          candidate.score < 0.4
+        ) {
+          return candidate; // Different magnitude range, reasonable match
+        }
+      }
+
+      return topImpactful;
+    }
+
+    // Fallback to any earthquake if no impactful ones found
     return sorted[0];
-  }, [metrics.seismicEquivalentMagnitude, dartStage]);
+  }, [metrics.seismicEquivalentMagnitude, metrics.tntMegatons, dartStage]);
 
   // Typewriter effect
   useEffect(() => {
