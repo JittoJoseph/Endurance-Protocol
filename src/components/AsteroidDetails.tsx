@@ -28,16 +28,38 @@ export default function AsteroidDetails({ asteroid }: AsteroidDetailsProps) {
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.5, delay: 0.3 }}
-      className="absolute left-4 md:left-8 bottom-4 md:bottom-8 z-20 pointer-events-auto w-[calc(100%-2rem)] md:w-96 max-h-[calc(100vh-8rem)] overflow-y-auto custom-scrollbar"
+      className="absolute left-4 md:left-8 bottom-40 md:bottom-8 z-20 pointer-events-auto w-[calc(100%-2rem)] md:w-96 max-h-[calc(100vh-20rem)] md:max-h-[calc(100vh-8rem)] overflow-y-auto custom-scrollbar"
     >
       <div className="bg-black/90 backdrop-blur-xl border border-white/20 shadow-2xl p-4 md:p-5">
-        {/* Header with collapse button */}
-        <div className="flex items-start justify-between mb-3">
+        {/* Header with collapse button - Make entire header clickable on mobile */}
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="md:hidden w-full flex items-start justify-between mb-3 text-left hover:bg-white/5 rounded p-2 -m-2 transition-colors"
+        >
           <div className="flex-1 min-w-0">
             <div className="text-white/40 text-[10px] uppercase tracking-widest mb-1">
               Target Asteroid
             </div>
-            <h3 className="text-white text-xl md:text-2xl font-light tracking-wide truncate">
+            <h3 className="text-white text-xl font-light tracking-wide truncate">
+              {asteroid.name}
+            </h3>
+          </div>
+          <motion.span
+            animate={{ rotate: expanded ? 180 : 0 }}
+            transition={{ duration: 0.3 }}
+            className="flex-shrink-0 ml-3 text-white/60 hover:text-white text-sm"
+          >
+            ▼
+          </motion.span>
+        </button>
+
+        {/* Desktop header */}
+        <div className="hidden md:flex items-start justify-between mb-3">
+          <div className="flex-1 min-w-0">
+            <div className="text-white/40 text-[10px] uppercase tracking-widest mb-1">
+              Target Asteroid
+            </div>
+            <h3 className="text-white text-2xl font-light tracking-wide truncate">
               {asteroid.name}
             </h3>
           </div>
@@ -57,21 +79,21 @@ export default function AsteroidDetails({ asteroid }: AsteroidDetailsProps) {
         </div>
 
         {/* Key Stats - Always Visible */}
-        <div className="grid grid-cols-2 gap-3 text-sm mb-3">
-          <div className="bg-white/5 border border-white/10 p-2 rounded">
+        <div className="grid grid-cols-2 gap-2 md:gap-3 text-sm mb-3">
+          <div className="bg-white/5 border border-white/10 p-2 md:p-3 rounded">
             <div className="text-white/40 text-[10px] uppercase tracking-wider mb-1">
               Diameter
             </div>
-            <div className="text-white font-mono text-base">
+            <div className="text-white font-mono text-sm md:text-base">
               {(asteroid.estDiameterMeters.avg / 1000).toFixed(3)} km
             </div>
           </div>
           {velocity && (
-            <div className="bg-white/5 border border-white/10 p-2 rounded">
+            <div className="bg-white/5 border border-white/10 p-2 md:p-3 rounded">
               <div className="text-white/40 text-[10px] uppercase tracking-wider mb-1">
                 Velocity
               </div>
-              <div className="text-white font-mono text-base">
+              <div className="text-white font-mono text-sm md:text-base">
                 {velocity.toFixed(2)} km/s
               </div>
             </div>
@@ -97,14 +119,14 @@ export default function AsteroidDetails({ asteroid }: AsteroidDetailsProps) {
               transition={{ duration: 0.3 }}
               className="overflow-hidden"
             >
-              <div className="pt-4 space-y-3 border-t border-white/10 mt-3">
+              <div className="pt-3 md:pt-4 space-y-2 md:space-y-3 border-t border-white/10 mt-3">
                 {/* Diameter Range */}
-                <div className="bg-white/5 border border-white/10 p-3 rounded">
+                <div className="bg-white/5 border border-white/10 p-2 md:p-3 rounded">
                   <div className="text-white/60 text-[10px] uppercase tracking-wider mb-2 flex items-center gap-2">
                     <span>📏</span>
                     <span>Size Estimate</span>
                   </div>
-                  <div className="space-y-1.5 text-xs">
+                  <div className="space-y-1 md:space-y-1.5 text-xs">
                     <div className="flex justify-between text-white/70">
                       <span>Minimum:</span>
                       <span className="font-mono text-white">
@@ -128,12 +150,12 @@ export default function AsteroidDetails({ asteroid }: AsteroidDetailsProps) {
 
                 {/* Close Approach Data */}
                 {asteroid.closeApproachData?.[0] && (
-                  <div className="bg-white/5 border border-white/10 p-3 rounded">
+                  <div className="bg-white/5 border border-white/10 p-2 md:p-3 rounded">
                     <div className="text-white/60 text-[10px] uppercase tracking-wider mb-2 flex items-center gap-2">
                       <span>🌍</span>
                       <span>Close Approach</span>
                     </div>
-                    <div className="space-y-1.5 text-xs">
+                    <div className="space-y-1 md:space-y-1.5 text-xs">
                       <div className="flex justify-between text-white/70">
                         <span>Velocity:</span>
                         <span className="font-mono text-white">
@@ -168,12 +190,12 @@ export default function AsteroidDetails({ asteroid }: AsteroidDetailsProps) {
                 )}
 
                 {/* NASA JPL Link */}
-                <div className="pt-3 border-t border-white/10">
+                <div className="pt-2 md:pt-3 border-t border-white/10">
                   <a
                     href={jplUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between w-full py-3 px-4 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 hover:border-cyan-500/50 text-cyan-400 hover:text-cyan-300 text-xs uppercase tracking-wider transition-all rounded group"
+                    className="flex items-center justify-between w-full py-2 md:py-3 px-3 md:px-4 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 hover:border-cyan-500/50 text-cyan-400 hover:text-cyan-300 text-xs uppercase tracking-wider transition-all rounded group"
                   >
                     <span className="flex items-center gap-2">
                       <span>🔗</span>
@@ -189,7 +211,7 @@ export default function AsteroidDetails({ asteroid }: AsteroidDetailsProps) {
                 </div>
 
                 {/* Info Box */}
-                <div className="bg-white/5 border border-white/10 p-3 rounded">
+                <div className="bg-white/5 border border-white/10 p-2 md:p-3 rounded">
                   <div className="flex items-start gap-2">
                     <span className="text-cyan-400 text-sm flex-shrink-0">
                       ℹ️

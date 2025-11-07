@@ -122,12 +122,12 @@ export default function LiveFeed({ onSelectAsteroid }: LiveFeedProps) {
       {/* Header - Always visible */}
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/5 transition-colors"
+        className="w-full px-3 md:px-4 py-2 md:py-3 flex items-center justify-between hover:bg-white/5 transition-colors"
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 md:gap-3">
           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
           <span className="text-white/60 text-xs uppercase tracking-widest">
-            Live: {upcomingApproaches.length} Upcoming Close Approaches
+            Live: {upcomingApproaches.length} Upcoming
           </span>
         </div>
         <motion.div
@@ -139,21 +139,26 @@ export default function LiveFeed({ onSelectAsteroid }: LiveFeedProps) {
         </motion.div>
       </button>
 
-      {/* Collapsed - Show next 3 */}
+      {/* Collapsed - Show next 3 - Clickable to expand */}
       {!expanded && (
-        <div className="px-4 pb-3 space-y-2">
+        <button
+          onClick={() => setExpanded(true)}
+          className="w-full px-3 md:px-4 pb-2 md:pb-3 space-y-1 md:space-y-2 text-left hover:bg-white/5 transition-colors"
+        >
           {nextThree.map((approach) => (
             <div
               key={approach.id + approach.time}
               className="text-xs text-white/50 flex items-center justify-between"
             >
-              <span className="truncate max-w-[200px]">{approach.name}</span>
-              <span className="text-white/40">
+              <span className="truncate max-w-[150px] md:max-w-[200px]">
+                {approach.name}
+              </span>
+              <span className="text-white/40 ml-2">
                 {getTimeUntil(approach.time)}
               </span>
             </div>
           ))}
-        </div>
+        </button>
       )}
 
       {/* Expanded - Show all with details */}
@@ -166,18 +171,18 @@ export default function LiveFeed({ onSelectAsteroid }: LiveFeedProps) {
             transition={{ duration: 0.3 }}
             className="border-t border-white/10"
           >
-            <div className="max-h-96 overflow-y-auto custom-scrollbar">
+            <div className="max-h-64 md:max-h-96 overflow-y-auto custom-scrollbar">
               {sortedApproaches.map((approach) => (
                 <motion.button
                   key={approach.id + approach.time}
                   onClick={() => handleSelectApproach(approach)}
-                  className="w-full px-4 py-3 hover:bg-white/5 border-b border-white/5 transition-colors text-left"
+                  className="w-full px-3 md:px-4 py-2 md:py-3 hover:bg-white/5 border-b border-white/5 transition-colors text-left"
                   whileHover={{ x: 4 }}
                 >
-                  <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start justify-between gap-2 md:gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-white/80 text-sm font-light truncate">
+                        <span className="text-white/80 text-xs md:text-sm font-light truncate">
                           {approach.name}
                         </span>
                         {approach.is_potentially_hazardous && (
@@ -186,7 +191,7 @@ export default function LiveFeed({ onSelectAsteroid }: LiveFeedProps) {
                           </span>
                         )}
                       </div>
-                      <div className="text-white/40 text-xs space-y-0.5">
+                      <div className="text-white/40 text-[10px] md:text-xs space-y-0.5">
                         <div>
                           Ø {(approach.diameter_m.avg / 1000).toFixed(2)} km •{" "}
                           {approach.velocity_km_s.toFixed(1)} km/s
@@ -208,7 +213,7 @@ export default function LiveFeed({ onSelectAsteroid }: LiveFeedProps) {
                 </motion.button>
               ))}
             </div>
-            <div className="px-4 py-2 bg-black/40 text-center">
+            <div className="px-3 md:px-4 py-2 bg-black/40 text-center">
               <span className="text-white/30 text-[10px] uppercase tracking-wider">
                 Click any asteroid to simulate impact
               </span>
