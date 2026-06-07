@@ -350,7 +350,7 @@ export default function Home() {
                       onClick={handleImpact}
                       className="flex-1 border-2 border-red-500/50 hover:border-red-400/80 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 py-3 px-4 transition-all duration-200 font-light tracking-wider uppercase text-sm rounded will-change-transform"
                     >
-                      🎯 Simulate Impact
+                      Simulate Impact
                     </button>
                     <button
                       onClick={handleReset}
@@ -399,7 +399,7 @@ export default function Home() {
                       onClick={handleImpact}
                       className="flex-1 border-2 border-red-500/50 hover:border-red-400/80 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 py-3 px-4 transition-all duration-200 font-light tracking-wider uppercase text-sm rounded will-change-transform"
                     >
-                      🎯 Simulate Impact
+                      Simulate Impact
                     </button>
                     <button
                       onClick={handleReset}
