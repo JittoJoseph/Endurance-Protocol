@@ -10,6 +10,7 @@ import AsteroidDetails from "@/components/AsteroidDetails";
 import { NeoSummary } from "@/types";
 import { getLocationDescription } from "@/lib/geocoding";
 import { DataCard, DataCardHeader, PrimaryButton, OutlineButton } from "@/components/ui/data-card";
+import { NasaLoader } from "@/components/ui/nasa-loader";
 import { FaTimes, FaArrowLeft } from "react-icons/fa";
 
 // Static data - moved outside component to avoid recreation
@@ -278,7 +279,14 @@ export default function Home() {
                 className="hidden md:block absolute right-8 top-32 z-20 pointer-events-auto w-80 max-h-[60vh] overflow-y-auto custom-scrollbar"
               >
                 <DataCard padding="md">
-                  <div className="sticky top-0 bg-black/80 backdrop-blur-md pb-3 -mx-4 px-4 z-10 border-b border-white/5">
+                  <div 
+                    className="sticky top-0 pb-3 -mx-4 px-4 z-10 border-b border-white/5"
+                    style={{
+                      backgroundColor: 'rgba(10, 10, 15, 0.4)',
+                      backdropFilter: 'blur(16px)',
+                      WebkitBackdropFilter: 'blur(16px)'
+                    }}
+                  >
                     <DataCardHeader title="Target Location" className="mb-0" />
                   </div>
                   <div className="space-y-1.5 mt-3">
@@ -401,12 +409,18 @@ export default function Home() {
 
         {/* Loading State */}
         {loading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50">
-            <DataCard padding="md">
-              <div className="flex flex-col items-center gap-3">
-                <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div>
-                <div className="text-white/40 text-[10px] uppercase tracking-widest">Loading data...</div>
-              </div>
+          <div 
+            className="absolute inset-0 flex items-center justify-center z-50"
+            style={{
+              backgroundColor: 'rgba(0, 0, 0, 0.4)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)'
+            }}
+          >
+            <DataCard padding="none" className="min-w-[240px]">
+              <NasaLoader text={
+                <>Establishing Uplink to DSN...<br/><span className="text-white/40 mt-1 block">Receiving Telemetry</span></>
+              } />
             </DataCard>
           </div>
         )}

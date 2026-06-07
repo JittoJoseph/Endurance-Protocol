@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FaChevronDown } from "react-icons/fa";
 import { NeoSummary } from "@/types";
 import { DataCard, DataCardHeader } from "@/components/ui/data-card";
+import { NasaLoader } from "@/components/ui/nasa-loader";
 
 interface CloseApproach {
   id: string;
@@ -90,8 +91,8 @@ export default function LiveFeed({ onSelectAsteroid }: LiveFeedProps) {
 
   if (loading) {
     return (
-      <DataCard padding="sm">
-        <div className="text-white/40 text-xs">Loading live data...</div>
+      <DataCard padding="none">
+        <NasaLoader text="Awaiting Sensor Feed..." />
       </DataCard>
     );
   }

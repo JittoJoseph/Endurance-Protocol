@@ -9,16 +9,23 @@ export interface DataCardProps {
 
 export const DataCard = ({ children, className, padding = 'md' }: DataCardProps) => {
     return (
-        <div className={cn(
-            "bg-black/80 backdrop-blur-md border border-white/10 rounded-sm relative overflow-hidden",
-            {
-                'p-0': padding === 'none',
-                'p-3': padding === 'sm',
-                'p-4': padding === 'md',
-                'p-6': padding === 'lg',
-            },
-            className
-        )}>
+        <div 
+            className={cn(
+                "border border-white/10 shadow-2xl rounded-sm relative overflow-hidden",
+                {
+                    'p-0': padding === 'none',
+                    'p-3': padding === 'sm',
+                    'p-4': padding === 'md',
+                    'p-6': padding === 'lg',
+                },
+                className
+            )}
+            style={{
+                backgroundColor: 'rgba(10, 10, 15, 0.4)',
+                backdropFilter: 'blur(16px)',
+                WebkitBackdropFilter: 'blur(16px)'
+            }}
+        >
             {children}
         </div>
     )

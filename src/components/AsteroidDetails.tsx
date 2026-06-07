@@ -81,9 +81,8 @@ export default function AsteroidDetails({ asteroid }: AsteroidDetailsProps) {
         </div>
 
         {asteroid.isPotentiallyHazardous && (
-          <div className="flex items-center gap-2 mb-4 bg-red-500/10 border border-red-500/20 p-2 rounded-sm">
-            <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse flex-shrink-0" />
-            <span className="text-red-400 text-[10px] uppercase tracking-wide font-medium">
+          <div className="border border-white/5 bg-white/5 p-2 rounded-sm">
+            <span className="text-white/80 font-mono text-xs">
               Potentially Hazardous
             </span>
           </div>

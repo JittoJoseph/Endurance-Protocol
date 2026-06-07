@@ -3,6 +3,7 @@
 import { NeoSummary } from "@/types";
 import { motion } from "framer-motion";
 import { DataCard, DataCardHeader } from "@/components/ui/data-card";
+import { NasaLoader } from "@/components/ui/nasa-loader";
 
 interface AsteroidCarouselProps {
   neos: NeoSummary[];
@@ -19,8 +20,8 @@ export default function AsteroidCarousel({
 }: AsteroidCarouselProps) {
   if (loading) {
     return (
-      <DataCard className="h-full flex items-center justify-center min-h-[150px]" padding="sm">
-        <div className="text-white/40 text-xs">Loading...</div>
+      <DataCard className="h-full flex items-center justify-center min-h-[150px]" padding="none">
+        <NasaLoader text="Scanning Near-Earth Orbit..." />
       </DataCard>
     );
   }
